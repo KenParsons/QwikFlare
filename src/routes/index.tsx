@@ -1,14 +1,24 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useServerMount$, useStore } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { Link } from '@builder.io/qwik-city';
 
+
+
 export default component$(() => {
+  const store = useStore({ 
+    now: new Date()
+  })
+
+  useServerMount$(async()=> { 
+    store.now = new Date();
+  })
+  
   return (
     <div>
       <h1>
         Welcome to Qwik <span class="lightning">⚡️</span>
       </h1>
-
+      <p>The server last ran me at {store.now.toUTCString()}</p>
       <ul>
         <li>
           Check out the <code>src/routes</code> directory to get started.
