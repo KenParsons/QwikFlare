@@ -1,1 +1,0 @@
-import{C as r}from"./q-acf637c1.js";import{f as s,a as l,T as c}from"./q-b30e299c.js";const i=()=>{const{contents:t}=s(r);if(t&&t.length>0){const o=t.length;let n=null;for(let e=o-1;e>=0;e--)n=l(t[e].default,{children:n});return n}return c};export{i as s_nd8yk3KO22c};
