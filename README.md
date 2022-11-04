@@ -1,10 +1,7 @@
 # QwikSSG
 
-This repo will be for building statically generated pages with Qwik, checking in and pushing to GitHub, and then serving via GitHub pages. This will be primarily for examples & debugging, or any other collaboration/contribution to Qwik.
-
-## The source code is in this repo for reference, but for ease of use, a separate repo was created for the pages deploy. That repo is just the /dist/ folder of this project.
-
-## The URL for the built site is 
+This will be primarily for examples & debugging, or any other collaboration/contribution to building statically generated pages with Qwik.
+ 
 
 
 ### Original Qwik App readme:
