@@ -80,3 +80,9 @@ npm run build # or `yarn build`
 ```
 npm run ssg
 ```
+
+## Static Site Generator (Node.js)
+
+```
+npm run ssg
+```
