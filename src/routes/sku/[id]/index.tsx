@@ -1,6 +1,7 @@
-import { component$, Resource, useStore } from '@builder.io/qwik';
-import { RequestHandler, useLocation } from '@builder.io/qwik-city';
-import { useEndpoint } from "../../../qwik-city/runtime/src/library/use-endpoint"
+import { component$, Resource } from '@builder.io/qwik';
+import { RequestHandler, useLocation } from "@builder.io/qwik-city"
+import { useEndpoint } from '~/qwik-city/runtime/src';
+
 
 export interface ProductDetails {
     title: string;
@@ -22,12 +23,25 @@ export const onGet: RequestHandler<ProductDetails> = async () => {
     }
 }
 
+export interface PostResponse {
+    success: boolean
+    timeStamp: string;
+}
+
+export const onPost: RequestHandler<PostResponse> = async (event) => {
+    // console.log(event);
+    const body = await event.request.json();
+    console.log(body)
+    return {
+        success: true,
+        timeStamp: (new Date()).toLocaleTimeString()
+    }
+}
 
 export default component$(() => {
-    const productEndpoint = useEndpoint<typeof onGet>("GET");
-
+    const productEndpoint = useEndpoint<typeof onGet>();
     const location = useLocation();
-    console.log(productEndpoint);
+
     return <div>
         <h1>SKU</h1>
         <p>Pathname: {location.pathname}</p>
@@ -48,16 +62,17 @@ export default component$(() => {
 
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
-    const productData = useStore(data);
 
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
-            <h1>{productData.title}</h1>
-            <h3>{productData.description}</h3>
+            <h1>{data.title}</h1>
+            <h3>{data.description}</h3>
             <p>Last updated at {data.timeStamp}</p>
 
         </div>
 
-        <p>{productData.price}</p>
+        <p>{data.price}</p>
     </div>
 })
+
+
