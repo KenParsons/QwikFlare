@@ -15,11 +15,13 @@ export const useEndpoint = <T = unknown>() => {
   const refetch = $(() => {
     console.log('Refetching!')
     refetchSignal.value = !refetchSignal.value;
+    console.log(refetchSignal);
   });
 
   const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
-    const href = track(loc, 'href');
-    track(() => refetchSignal.value)
+    const href = track(() => loc.href);
+    track(() => refetchSignal.value);
+
     if (isServer) {
       if (!env) {
         throw new Error('Endpoint response body is missing');
@@ -27,7 +29,7 @@ export const useEndpoint = <T = unknown>() => {
       return env.response.body;
     } else {
       // fetch() for new data when the pathname has changed
-      const clientData = await loadClientData(href, true);
+      const clientData = await loadClientData(href);
       return clientData && clientData.body;
     }
   });
@@ -35,62 +37,84 @@ export const useEndpoint = <T = unknown>() => {
   return { refetch, resource }
 };
 
-export const loadClientData = async (href: string, isRefetching?: boolean) => {
-  const { cacheModules } = await import('@qwik-city-plan');
+
+export const loadClientData = async (href: string) => {
   const pagePathname = new URL(href).pathname;
   const endpointUrl = getClientEndpointPath(pagePathname);
-  const now = Date.now();
-  const expiration = cacheModules ? 600000 : 15000;
-
-  const cachedClientPageIndex = cachedClientPages.findIndex((c) => c.u === endpointUrl);
-
-  let cachedClientPageData = cachedClientPages[cachedClientPageIndex];
 
   dispatchPrefetchEvent({
     links: [pagePathname],
   });
 
-  if (isRefetching || !cachedClientPageData || cachedClientPageData.t + expiration < now) {
-    cachedClientPageData = {
-      u: endpointUrl,
-      t: now,
-      c: new Promise<ClientPageData | null>((resolve) => {
-        fetch(endpointUrl).then(
-          (clientResponse) => {
-            const contentType = clientResponse.headers.get('content-type') || '';
-            if (clientResponse.ok && contentType.includes('json')) {
-              clientResponse.json().then(
-                (clientData: ClientPageData) => {
-                  dispatchPrefetchEvent({
-                    bundles: clientData.prefetch,
-                    links: [pagePathname],
-                    // qKeys: getDocumentQKeys(document),
-                  });
-                  resolve(clientData);
-                },
-                () => resolve(null)
-              );
-            } else {
-              resolve(null);
-            }
-          },
-          () => resolve(null)
-        );
-      }),
-    };
-
-    for (let i = cachedClientPages.length - 1; i >= 0; i--) {
-      if (cachedClientPages[i].t + expiration < now) {
-        cachedClientPages.splice(i, 1);
-      }
-    }
-    cachedClientPages.push(cachedClientPageData);
+  const clientResponse = await fetch(endpointUrl);
+  const contentType = clientResponse.headers.get('content-type') || '';
+  if (clientResponse.ok && contentType.includes('json')) {
+    const clientData: ClientPageData = await clientResponse.json();
+    dispatchPrefetchEvent({
+      bundles: clientData.prefetch,
+      links: [pagePathname],
+    });
+    return clientData;
   }
-
-  cachedClientPageData.c.catch((e) => console.error(e));
-
-  return cachedClientPageData.c;
 };
+
+
+// export const loadClientData = async (href: string, isRefetching?: boolean) => {
+//   const { cacheModules } = await import('@qwik-city-plan');
+//   const pagePathname = new URL(href).pathname;
+//   const endpointUrl = getClientEndpointPath(pagePathname);
+//   const now = Date.now();
+//   const expiration = cacheModules ? 600000 : 15000;
+
+//   const cachedClientPageIndex = cachedClientPages.findIndex((c) => c.u === endpointUrl);
+
+//   let cachedClientPageData = cachedClientPages[cachedClientPageIndex];
+
+//   dispatchPrefetchEvent({
+//     links: [pagePathname],
+//   });
+
+//   if (isRefetching || !cachedClientPageData || cachedClientPageData.t + expiration < now) {
+//     cachedClientPageData = {
+//       u: endpointUrl,
+//       t: now,
+//       c: new Promise<ClientPageData | null>((resolve) => {
+//         fetch(endpointUrl).then(
+//           (clientResponse) => {
+//             const contentType = clientResponse.headers.get('content-type') || '';
+//             if (clientResponse.ok && contentType.includes('json')) {
+//               clientResponse.json().then(
+//                 (clientData: ClientPageData) => {
+//                   dispatchPrefetchEvent({
+//                     bundles: clientData.prefetch,
+//                     links: [pagePathname],
+//                     // qKeys: getDocumentQKeys(document),
+//                   });
+//                   resolve(clientData);
+//                 },
+//                 () => resolve(null)
+//               );
+//             } else {
+//               resolve(null);
+//             }
+//           },
+//           () => resolve(null)
+//         );
+//       }),
+//     };
+
+//     for (let i = cachedClientPages.length - 1; i >= 0; i--) {
+//       if (cachedClientPages[i].t + expiration < now) {
+//         cachedClientPages.splice(i, 1);
+//       }
+//     }
+//     cachedClientPages.push(cachedClientPageData);
+//   }
+
+//   cachedClientPageData.c.catch((e) => console.error(e));
+
+//   return cachedClientPageData.c;
+// };
 
 // export const getDocumentQKeys = (doc: Document) => {
 //   let comment: Comment | null | undefined;
@@ -112,10 +136,10 @@ export const loadClientData = async (href: string, isRefetching?: boolean) => {
 //   return Array.from(qKeys);
 // };
 
-const cachedClientPages: CachedClientPageData[] = [];
+// const cachedClientPages: CachedClientPageData[] = [];
 
-interface CachedClientPageData {
-  c: Promise<ClientPageData | null>;
-  t: number;
-  u: string;
-}
+// interface CachedClientPageData {
+//   c: Promise<ClientPageData | null>;
+//   t: number;
+//   u: string;
+// }
