@@ -1,27 +1,24 @@
 import { component$, Resource, useStore } from '@builder.io/qwik';
 import { RequestHandler, useLocation } from '@builder.io/qwik-city';
-import { useEndpoint } from "../../../qwik-city/runtime/src/library/_use-endpoint"
+import { useEndpoint } from "../../../qwik-city/runtime/src/library/use-endpoint"
 
 export interface ProductDetails {
     title: string;
     description: string;
     price: string;
     timeStamp: string;
+    random: number;
 }
 
-export const onGet: RequestHandler<ProductDetails> = async (event) => {
+export const onGet: RequestHandler<ProductDetails> = async () => {
     //pretend database fetch
-
-    const url = new URL(event.request.url);
-    const paramsObj: { [key: string]: string } = {}
-    url.searchParams.forEach((value, key) => {
-        paramsObj[key] = value;
-    })
+    const random = Math.random();
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
         price: "Priceless",
-        timeStamp: (new Date()).toLocaleTimeString()
+        timeStamp: (new Date()).toLocaleTimeString(),
+        random
     }
 }
 
@@ -38,7 +35,7 @@ export default component$(() => {
         <hr />
         <Resource value={productEndpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
         <button onClick$={() => {
-            productEndpoint.refresh();
+            productEndpoint.refetch();
         }}>
             Refetch
         </button>
@@ -48,12 +45,12 @@ export default component$(() => {
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
     const productData = useStore(data);
-    console.log(productData.timeStamp)
+    
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
             <h1>{productData.title}</h1>
             <h3>{productData.description}</h3>
-            <p>Last updated at {productData.timeStamp}</p>
+            <p>Last updated at {data.timeStamp}</p>
 
         </div>
 
