@@ -9,10 +9,7 @@ import { dispatchPrefetchEvent } from './client-navigate';
 /**
  * @alpha
  */
-export const useEndpoint = <T = unknown>(fetchOptions: RequestInit) => {
-  if (fetchOptions.method === "GET" && !fetchOptions.body) {
-    throw Error('Cannot pass a body when using the GET method. Remove the body or use a different method (most likely POST)')
-  }
+export const useEndpoint = <T = unknown>() => {
 
   const env = useQwikCityEnv();
 
@@ -38,7 +35,7 @@ export const useEndpoint = <T = unknown>(fetchOptions: RequestInit) => {
       }
       return env.response.body;
     } else {
-      const clientData = await loadClientData(href, fetchOptions);
+      const clientData = await loadClientData(href);
       return clientData && clientData.body;
     }
   });
@@ -53,7 +50,7 @@ export const invalidateCacheByHref = (href: string) => {
   cachedClientPages.splice(index, 1);
 }
 
-export const loadClientData = async (href: string, fetchOptions: RequestInit) => {
+export const loadClientData = async (href: string) => {
   const { cacheModules } = await import('@qwik-city-plan');
   const pagePathname = new URL(href).pathname;
   const endpointUrl = getClientEndpointPath(pagePathname);
@@ -73,7 +70,7 @@ export const loadClientData = async (href: string, fetchOptions: RequestInit) =>
       u: endpointUrl,
       t: now,
       c: new Promise<ClientPageData | null>((resolve) => {
-        fetch(endpointUrl, { ...fetchOptions }).then(
+        fetch(endpointUrl).then(
           (clientResponse) => {
             const contentType = clientResponse.headers.get('content-type') || '';
             if (clientResponse.ok && contentType.includes('json')) {
