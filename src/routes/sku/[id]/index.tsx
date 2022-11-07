@@ -1,6 +1,8 @@
-import { component$, Resource, useStore } from '@builder.io/qwik';
-import { RequestHandler, useLocation } from '@builder.io/qwik-city';
-import { useEndpoint } from "../../../qwik-city/runtime/src/library/use-endpoint"
+
+import { component$, Resource, useClientEffect$ } from "@builder.io/qwik"
+import { useLocation } from '@builder.io/qwik-city';
+import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
+
 
 export interface ProductDetails {
     title: string;
@@ -22,20 +24,26 @@ export const onGet: RequestHandler<ProductDetails> = async () => {
     }
 }
 
-
 export default component$(() => {
-    const productEndpoint = useEndpoint<typeof onGet>("GET");
-
+    const productEndpoint = useEndpoint<typeof onGet>();
     const location = useLocation();
-    console.log(productEndpoint);
+
+
+    useClientEffect$(() => {
+        const interval = setInterval(() => {
+            productEndpoint.refetch();
+        }, 10000)
+        return () => { clearInterval(interval) }
+    })
+
     return <div>
         <h1>SKU</h1>
         <p>Pathname: {location.pathname}</p>
         <p>Sku Id: {location.params.id}</p>
 
         <hr />
-        <Resource value={productEndpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
-        <Resource value={productEndpoint.resource} onResolved={(data) => <div>
+        <Resource value={productEndpoint} onResolved={(data) => <ProductDisplay data={data} />} />
+        <Resource value={productEndpoint} onResolved={(data) => <div>
             Hi I'm also using the same data {data.timeStamp}
         </div>} />
         <button onClick$={() => {
@@ -48,16 +56,17 @@ export default component$(() => {
 
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
-    const productData = useStore(data);
 
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
-            <h1>{productData.title}</h1>
-            <h3>{productData.description}</h3>
+            <h1>{data.title}</h1>
+            <h3>{data.description}</h3>
             <p>Last updated at {data.timeStamp}</p>
 
         </div>
 
-        <p>{productData.price}</p>
+        <p>{data.price}</p>
     </div>
 })
+
+
