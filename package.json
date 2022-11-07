@@ -39,6 +39,6 @@
     "wrangler": "beta"
   },
   "dependencies": {
-    "@builder.io/qwik": "^0.11.1"
+    "@builder.io/qwik": "file:src/qwik/packages/qwik/dist"
   }
 }

@@ -1,6 +1,7 @@
-import { component$, Resource } from '@builder.io/qwik';
-import { RequestHandler, useLocation } from "@builder.io/qwik-city"
-import { useEndpoint } from '~/qwik-city/runtime/src';
+
+import { component$, Resource, useClientEffect$ } from "@builder.io/qwik"
+import { useLocation } from '@builder.io/qwik-city';
+import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 
 
 export interface ProductDetails {
@@ -23,24 +24,17 @@ export const onGet: RequestHandler<ProductDetails> = async () => {
     }
 }
 
-export interface PostResponse {
-    success: boolean
-    timeStamp: string;
-}
-
-export const onPost: RequestHandler<PostResponse> = async (event) => {
-    // console.log(event);
-    const body = await event.request.json();
-    console.log(body)
-    return {
-        success: true,
-        timeStamp: (new Date()).toLocaleTimeString()
-    }
-}
-
 export default component$(() => {
     const productEndpoint = useEndpoint<typeof onGet>();
     const location = useLocation();
+
+
+    useClientEffect$(() => {
+        const interval = setInterval(() => {
+            productEndpoint.refetch();
+        }, 10000)
+        return () => { clearInterval(interval) }
+    })
 
     return <div>
         <h1>SKU</h1>
@@ -48,8 +42,8 @@ export default component$(() => {
         <p>Sku Id: {location.params.id}</p>
 
         <hr />
-        <Resource value={productEndpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
-        <Resource value={productEndpoint.resource} onResolved={(data) => <div>
+        <Resource value={productEndpoint} onResolved={(data) => <ProductDisplay data={data} />} />
+        <Resource value={productEndpoint} onResolved={(data) => <div>
             Hi I'm also using the same data {data.timeStamp}
         </div>} />
         <button onClick$={() => {
