@@ -24,9 +24,10 @@ export const onGet: RequestHandler<ProductDetails> = async () => {
 
 
 export default component$(() => {
-    const productEndpoint = useEndpoint<typeof onGet>();
-    const location = useLocation();
+    const productEndpoint = useEndpoint<typeof onGet>("GET");
 
+    const location = useLocation();
+    console.log(productEndpoint);
     return <div>
         <h1>SKU</h1>
         <p>Pathname: {location.pathname}</p>
@@ -34,6 +35,9 @@ export default component$(() => {
 
         <hr />
         <Resource value={productEndpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
+        <Resource value={productEndpoint.resource} onResolved={(data) => <div>
+            Hi I'm also using the same data {data.timeStamp}
+        </div>} />
         <button onClick$={() => {
             productEndpoint.refetch();
         }}>
@@ -45,7 +49,7 @@ export default component$(() => {
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
     const productData = useStore(data);
-    
+
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
             <h1>{productData.title}</h1>

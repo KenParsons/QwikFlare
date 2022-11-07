@@ -1,4 +1,5 @@
 import { $, useResource$, useSignal } from '@builder.io/qwik';
+
 import { useLocation, useQwikCityEnv } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
 import type { ClientPageData, GetEndpointData } from './types';
@@ -8,16 +9,27 @@ import { dispatchPrefetchEvent } from './client-navigate';
 /**
  * @alpha
  */
-export const useEndpoint = <T = unknown>() => {
-  const loc = useLocation();
+export const useEndpoint = <T = unknown>(fetchOptions: RequestInit) => {
+  if (fetchOptions.method === "GET" && !fetchOptions.body) {
+    throw Error('Cannot pass a body when using the GET method. Remove the body or use a different method (most likely POST)')
+  }
+
   const env = useQwikCityEnv();
+
+  const loc = useLocation();
+  const href = loc.href;
+  //moving href to outside useResource closure to have easy access to invalide cache at this level
+  //so we can easily invalidate the cache when refetch() is called
   const refetchSignal = useSignal(false);
   const refetch = $(() => {
+    invalidateCacheByHref(href);
     refetchSignal.value = !refetchSignal.value;
   });
 
   const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
-    const href = track(() => loc.href);
+    // fetch() for new data when the pathname has changed
+    track(() => loc.href);
+    // fetch() for new data when user triggers a manual refetch() function
     track(() => refetchSignal.value);
 
     if (isServer) {
@@ -26,17 +38,22 @@ export const useEndpoint = <T = unknown>() => {
       }
       return env.response.body;
     } else {
-      // fetch() for new data when the pathname has changed
-      const clientData = await loadClientData(href, true);
+      const clientData = await loadClientData(href, fetchOptions);
       return clientData && clientData.body;
     }
   });
 
-  return { refetch, resource }
+  return { resource, refetch }
 };
 
+export const invalidateCacheByHref = (href: string) => {
+  const pagePathname = new URL(href).pathname;
+  const endpointUrl = getClientEndpointPath(pagePathname);
+  const index = cachedClientPages.findIndex((c) => c.u === endpointUrl);
+  cachedClientPages.splice(index, 1);
+}
 
-export const loadClientData = async (href: string, isRefetching?: boolean) => {
+export const loadClientData = async (href: string, fetchOptions: RequestInit) => {
   const { cacheModules } = await import('@qwik-city-plan');
   const pagePathname = new URL(href).pathname;
   const endpointUrl = getClientEndpointPath(pagePathname);
@@ -51,12 +68,12 @@ export const loadClientData = async (href: string, isRefetching?: boolean) => {
     links: [pagePathname],
   });
 
-  if (isRefetching || !cachedClientPageData || cachedClientPageData.t + expiration < now) {
+  if (!cachedClientPageData || cachedClientPageData.t + expiration < now) {
     cachedClientPageData = {
       u: endpointUrl,
       t: now,
       c: new Promise<ClientPageData | null>((resolve) => {
-        fetch(endpointUrl).then(
+        fetch(endpointUrl, { ...fetchOptions }).then(
           (clientResponse) => {
             const contentType = clientResponse.headers.get('content-type') || '';
             if (clientResponse.ok && contentType.includes('json')) {
