@@ -12,8 +12,9 @@
     "source-map" "0.7.4"
     "vfile" "5.3.5"
 
-"@builder.io/qwik@file:../../../src/qwik/packages/qwik/dist":
-  "resolved" "file:../../../src/qwik/packages/qwik/dist"
+"@builder.io/qwik@file:src/qwik/packages/qwik/dist":
+  "resolved" "file:src/qwik/packages/qwik/dist"
+  "version" "0.13.0-dev20221108021301"
 
 "@cloudflare/workers-types@^2.2.2":
   "integrity" "sha512-kaMn2rueJ0PL1TYVGknTCh0X0x0d9G+FNXAFep7/4uqecEZoQb/63o6rOmMuiqI09zLuHV6xhKRXinokV/MY9A=="
