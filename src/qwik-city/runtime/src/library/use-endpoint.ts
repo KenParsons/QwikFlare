@@ -1,12 +1,10 @@
-import { $, useResource$, useResourceQrl, useSignal } from '@builder.io/qwik';
+import { $, useResource$, useSignal } from '@builder.io/qwik';
 
 import { useLocation, useQwikCityEnv } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
 import type { ClientPageData, GetEndpointData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
-import { createProxy } from '../core/object/q-object';
-import e from 'express';
 
 /**
  * @alpha
