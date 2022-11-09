@@ -1,5 +1,5 @@
 
-import { component$, Resource, useClientEffect$ } from "@builder.io/qwik"
+import { component$, Resource, } from "@builder.io/qwik"
 import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 
@@ -14,27 +14,18 @@ export interface ProductDetails {
 
 export const onGet: RequestHandler<ProductDetails> = async () => {
     //pretend database fetch
-    const random = Math.random();
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
         price: "Priceless",
         timeStamp: (new Date()).toLocaleTimeString(),
-        random
+        random: Math.random()
     }
 }
 
 export default component$(() => {
     const productEndpoint = useEndpoint<typeof onGet>();
     const location = useLocation();
-
-
-    useClientEffect$(() => {
-        const interval = setInterval(() => {
-            productEndpoint.refetch();
-        }, 10000)
-        return () => { clearInterval(interval) }
-    })
 
     return <div>
         <h1>SKU</h1>
