@@ -1,30 +1,46 @@
-import { $, useResource$, useSignal } from '@builder.io/qwik';
-
-import { useLocation, useQwikCityEnv } from './use-functions';
+import { $, noSerialize, useEnvData, useResource$, useSignal } from '@builder.io/qwik';
+import { useLocation, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
-import type { ClientPageData, GetEndpointData } from './types';
+import type { ClientPageData, GetEndpointData, QwikCityEnvData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
+import { mapOnMethods } from '~/mapOnMethods';
 
+
+export const useQwikCityEnv = () => {
+    return noSerialize(useEnvData<QwikCityEnvData>('qwikcity'))
+};
+
+
+// export function getContainerState(key: string, defaultValue?: any) {
+//     const ctx = useInvokeContext();
+//     return ctx.$renderCtx$.$static$.$containerState$;
+// }
 /**
  * @alpha
  */
-export const useEndpoint = <T = unknown>() => {
+export const useEndpoint = <T = unknown>(route?: string) => {
 
     const env = useQwikCityEnv();
     const loc = useLocation();
-    const href = loc.href;
-    //moving href to outside useResource closure to have easy access to invalide cache at this level
-    //so we can easily invalidate the cache when refetch() is called
+    const origin = new URL(loc.href).origin
+    const href = route ? (origin + formatRoute(route)) : loc.href;
+    function formatRoute(route: string) {
+        if (route.startsWith("/")) return route
+        else return "/" + route;
+    }
+
     const refetchSignal = useSignal(false);
     const refetch = $(() => {
         invalidateCacheByHref(href);
         refetchSignal.value = !refetchSignal.value;
     });
-
+    
     const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
-        track(() => loc.href);
+        const onMethodsByPath = await mapOnMethods();
+        console.log(onMethodsByPath);
+        track(() => href);
         // fetch() for new data when user triggers a manual refetch() function
         track(() => refetchSignal.value);
 
@@ -32,7 +48,15 @@ export const useEndpoint = <T = unknown>() => {
             if (!env) {
                 throw new Error('Endpoint response body is missing');
             }
-            return env.response.body;
+            // const { onGet } = await import("../../../../routes/flower");
+
+            if (loc.href !== href) {
+                const response = await fetch(href + "/q-data.json").then(r => r.json());
+                return response.body;
+            } else {
+                return env.response.body;
+            }
+
         } else {
             const clientData = await loadClientData(href);
             return clientData && clientData.body;
