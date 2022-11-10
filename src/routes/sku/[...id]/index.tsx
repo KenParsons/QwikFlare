@@ -38,6 +38,7 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 export default component$(() => {
     const productEndpoint = useEndpoint<typeof onGet>();
     const flowerEndpoint = useEndpoint<typeof flowerGet>("flower");
+    
     let location: RouteLocation = {
         pathname: "I made it up",
         params: {
@@ -66,7 +67,7 @@ export const DisplayContainer = component$(({ endpoint }: { endpoint: any }) => 
         <Resource value={endpoint} onResolved={(data) => <ProductDisplay data={data} />} />
         <Resource value={endpoint} onResolved={(data) => <div>
             Hi I'm also using the same data {data.timeStamp}
-            <p>Headers: {data.headers}</p>
+            {/* <p>Headers: {data.headers}</p> */}
         </div>} />
         <button onClick$={() => {
             endpoint.refetch();
