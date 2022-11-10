@@ -1,10 +1,10 @@
 
-import { component$, Resource, } from "@builder.io/qwik"
+import { component$, Resource, ResourceReturn, } from "@builder.io/qwik"
 import { RouteLocation, useLocation } from '@builder.io/qwik-city';
 import { mapOnMethods } from "~/mapOnMethods";
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 import { useClientEffect$ } from "~/qwik-city/runtime/src/core";
-import { onGet as flowersGet } from "~/routes/flower";
+import flower, { onGet as flowerGet } from "~/routes/flower";
 
 export interface ProductDetails {
     title: string;
@@ -37,7 +37,7 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 
 export default component$(() => {
     const productEndpoint = useEndpoint<typeof onGet>();
-
+    const flowerEndpoint = useEndpoint<typeof flowerGet>("flower");
     let location: RouteLocation = {
         pathname: "I made it up",
         params: {
@@ -50,27 +50,31 @@ export default component$(() => {
         location = useLocation();
     }
 
-    mapOnMethods();
-
     return <div>
         <h1>SKU</h1>
         <p>Pathname: {location.pathname}</p>
         <p>Sku Id: {location.params.id}</p>
 
         <hr />
-        <Resource value={productEndpoint} onResolved={(data) => <ProductDisplay data={data} />} />
-        <Resource value={productEndpoint} onResolved={(data) => <div>
+        <DisplayContainer endpoint={productEndpoint} />
+        <DisplayContainer endpoint={flowerEndpoint} />
+    </div>
+});
+
+export const DisplayContainer = component$(({ endpoint }: { endpoint: any }) => {
+    return <div>
+        <Resource value={endpoint} onResolved={(data) => <ProductDisplay data={data} />} />
+        <Resource value={endpoint} onResolved={(data) => <div>
             Hi I'm also using the same data {data.timeStamp}
             <p>Headers: {data.headers}</p>
         </div>} />
         <button onClick$={() => {
-            productEndpoint.refetch();
+            endpoint.refetch();
         }}>
             Refetch
         </button>
     </div>
-});
-
+})
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
 
