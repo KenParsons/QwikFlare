@@ -1,6 +1,6 @@
 type OnMethodsByPath = {
     [key: string]: {
-        [key: string]: boolean
+        [key: string]: Function
     }
 }
 
@@ -11,12 +11,12 @@ export const mapOnMethods = async () => {
     for (const routeData of cityPlan.routes) {
         const [regex, exportsGetters, routeParams, path, qrls] = routeData;
 
-        const onMethods: { [key: string]: boolean } = {}
+        const onMethods: { [key: string]: Function } = {}
         for (const getter of exportsGetters) {
             const theseExports = getter();
             for (const key in theseExports) {
                 if (key.startsWith("on")) {
-                    onMethods[key] = true;
+                    onMethods[key] = theseExports[key];
                 }
             }
         }

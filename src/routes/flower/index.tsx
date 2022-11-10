@@ -15,10 +15,11 @@ export interface ProductDetails {
 
 export const onGet: RequestHandler<ProductDetails> = async (request) => {
     //pretend database fetch
-    const headers: any = {}
-    request.request.headers.forEach((value, key) => {
-        headers[key] = value;
-    })
+    const headers = request.request.headers;
+    // const headers: any = {}
+    // request.request.headers.forEach((value, key) => {
+    //     headers[key] = value;
+    // })
     return {
         title: "Flowers",
         description: "🌹🌷💐💐🌼🌻💐🌺🌺🌹🌼💐",

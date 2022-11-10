@@ -20,26 +20,23 @@ export const useQwikCityEnv = () => {
  * @alpha
  */
 export const useEndpoint = <T = unknown>(route?: string) => {
+    if (route && !route.startsWith("/")) {
+        route = "/" + route;
+    }
 
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
-    const href = route ? (origin + formatRoute(route)) : loc.href;
-    function formatRoute(route: string) {
-        if (route.startsWith("/")) return route
-        else return "/" + route;
-    }
+    const href = route ? (origin + route) : loc.href;
 
     const refetchSignal = useSignal(false);
     const refetch = $(() => {
         invalidateCacheByHref(href);
         refetchSignal.value = !refetchSignal.value;
     });
-    
+
     const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
-        const onMethodsByPath = await mapOnMethods();
-        console.log(onMethodsByPath);
         track(() => href);
         // fetch() for new data when user triggers a manual refetch() function
         track(() => refetchSignal.value);
@@ -48,11 +45,15 @@ export const useEndpoint = <T = unknown>(route?: string) => {
             if (!env) {
                 throw new Error('Endpoint response body is missing');
             }
-            // const { onGet } = await import("../../../../routes/flower");
 
             if (loc.href !== href) {
-                const response = await fetch(href + "/q-data.json").then(r => r.json());
-                return response.body;
+                const onMethodsByPath = await mapOnMethods();
+                const thisPathMethods = onMethodsByPath[route!];
+                const handler = thisPathMethods.onGet || thisPathMethods.onRequest;
+                if (!handler) {
+                    throw new Error('Attempting to access a route without a handler function')
+                }
+                return handler({ request: { headers: { "Direct from SSR": true } } });
             } else {
                 return env.response.body;
             }

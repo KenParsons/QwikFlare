@@ -36,9 +36,8 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 }
 
 export default component$(() => {
-    const productEndpoint = useEndpoint<typeof onGet>("flower");
-    // const flowersEndpoint = useEndpoint<typeof flowersGet>("/flower");
-    // const location = useLocation();
+    const productEndpoint = useEndpoint<typeof onGet>();
+
     let location: RouteLocation = {
         pathname: "I made it up",
         params: {
