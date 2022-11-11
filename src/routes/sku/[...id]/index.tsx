@@ -1,10 +1,8 @@
 
-import { component$, Resource, ResourceReturn, } from "@builder.io/qwik"
-import { RouteLocation, useLocation } from '@builder.io/qwik-city';
-import { mapOnMethods } from "~/mapOnMethods";
+import { component$, Resource, } from "@builder.io/qwik"
+import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
-import { useClientEffect$ } from "~/qwik-city/runtime/src/core";
-import flower, { onGet as flowerGet } from "~/routes/flower";
+import { onGet as flowerGet } from "~/routes/flower";
 
 export interface ProductDetails {
     title: string;
@@ -12,44 +10,25 @@ export interface ProductDetails {
     price: string;
     timeStamp: string;
     random: number;
-    headers: string;
-}
-
-export const onPost: RequestHandler<any> = async (request) => {
 
 }
 
 export const onGet: RequestHandler<ProductDetails> = async (request) => {
     //pretend database fetch
-    const headers: any = {}
-    request.request.headers.forEach((value, key) => {
-        headers[key] = value;
-    })
+    console.log(request);
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
         price: "Priceless",
         timeStamp: (new Date()).toLocaleTimeString(),
         random: Math.random(),
-        headers: JSON.stringify(headers)
     }
 }
 
 export default component$(() => {
     const productEndpoint = useEndpoint<typeof onGet>();
     const flowerEndpoint = useEndpoint<typeof flowerGet>("flower");
-    
-    let location: RouteLocation = {
-        pathname: "I made it up",
-        params: {
-            id: "Also made it up"
-        },
-        href: "",
-        query: {}
-    }
-    if (Math.random() > 0.5) {
-        location = useLocation();
-    }
+    const location = useLocation();
 
     return <div>
         <h1>SKU</h1>

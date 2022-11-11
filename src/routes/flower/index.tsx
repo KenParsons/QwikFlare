@@ -10,23 +10,17 @@ export interface ProductDetails {
     price: string;
     timeStamp: string;
     random: number;
-    headers: string
 }
 
 export const onGet: RequestHandler<ProductDetails> = async (request) => {
     //pretend database fetch
-    const headers = request.request.headers;
-    // const headers: any = {}
-    // request.request.headers.forEach((value, key) => {
-    //     headers[key] = value;
-    // })
+    console.log(request);
     return {
         title: "Flowers",
         description: "🌹🌷💐💐🌼🌻💐🌺🌺🌹🌼💐",
         price: "$70",
         timeStamp: (new Date()).toLocaleTimeString(),
         random: Math.random(),
-        headers: JSON.stringify(headers)
     }
 }
 
