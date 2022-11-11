@@ -1,5 +1,5 @@
 
-import { component$, Resource, } from "@builder.io/qwik"
+import { component$, Resource, useClientEffect$, } from "@builder.io/qwik"
 import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 
@@ -26,10 +26,17 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 }
 
 export default component$(() => {
-    const thisEndpoint = useEndpoint<typeof onGet>();
-    const anotherEndpoint = useEndpoint("/plainPage");
-
     const location = useLocation();
+    const endpoint = useEndpoint("/flower");
+
+    const endpointPromise = useEndpoint("/plainPage").resource.promise;
+    console.log(endpointPromise)
+
+    useClientEffect$(() => {
+        endpointPromise.then(data => {
+            console.log(data.test)
+        });
+    })
 
     return <div>
         <h1>SKU</h1>
@@ -37,27 +44,21 @@ export default component$(() => {
         <p>Sku Id: {location.params.id}</p>
 
         <hr />
-        <DisplayContainer endpoint={thisEndpoint} />
-        <hr />
-        <DisplayContainer endpoint={anotherEndpoint} />
+        <div>
+
+            <Resource value={endpoint} onResolved={(data) => <div>
+                Hi I'm also using the same data {data.timeStamp}
+                {/* <p>Headers: {data.headers}</p> */}
+            </div>}
+            />
+            <button onClick$={() => endpoint.refetch()}>
+                Refetch
+            </button>
+        </div>
     </div>
 });
 
-export const DisplayContainer = component$(({ endpoint }: { endpoint: any }) => {
-    return <div>
-        <Resource value={endpoint} onResolved={(data) => <ProductDisplay data={data} />} />
-        <Resource value={endpoint} onResolved={(data) => <div>
-            Hi I'm also using the same data {data.timeStamp}
-            {/* <p>Headers: {data.headers}</p> */}
-        </div>} />
-        <button onClick$={() => {
-            endpoint.refetch();
-        }}>
-            Refetch
-        </button>
-    </div>
-})
-
+// <Resource value={endpoint} onResolved={(data) => <ProductDisplay data={data} />} />
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>

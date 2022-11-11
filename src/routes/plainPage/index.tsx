@@ -1,10 +1,10 @@
 import { RequestHandler } from "~/qwik-city/runtime/src";
 import { component$ } from "~/qwik/packages/qwik/dist/core";
 
-export const onGet: RequestHandler<any> = async (requestEvent) => { 
-    return requestEvent
+export const onGet: RequestHandler<{ test: number }> = async (requestEvent) => {
+    return { test: Math.random() }
 }
 
-export default component$(()=> { 
+export default component$(() => {
     return <div>Hello World!</div>
 })

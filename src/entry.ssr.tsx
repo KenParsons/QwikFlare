@@ -20,7 +20,7 @@ export default function (opts: RenderToStreamOptions) {
 
     //Note that this only needs to be run in dev mode since it's just type information. 
     //Can skip it as production server to save runtime load
-    generateRouteTypes();
+    generateEndpointTypes();
 
     return renderToStream(<Root />, {
         manifest,
@@ -35,13 +35,13 @@ export default function (opts: RenderToStreamOptions) {
     });
 }
 
-async function generateRouteTypes() {
+async function generateEndpointTypes() {
     const fs = await import('fs');
     const path = await import('path');
 
     getOnMethodsByPath().then(map => {
         console.log(map);
-        const filePath = path.join(process.cwd(), "src", "routeTypes.ts");
+        const filePath = path.join(process.cwd(), "src", "endpointTypes.ts");
         const routeTypes = buildRouteTypesString(map);
         fs.writeFileSync(filePath, routeTypes)
     });
@@ -51,7 +51,7 @@ async function generateRouteTypes() {
 function buildRouteTypesString(map: Awaited<ReturnType<typeof getOnMethodsByPath>>) {
     let string = `//This is an automatically generated file. There is no need to update it manually.
 //If you added or removed a route and it's not showing here, restart your dev server 🔁
-export type Routes = `;
+export type Endpoints = `;
     for (const route in map) {
         const onMethods = map[route];
         let shouldInclude = false;

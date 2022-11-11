@@ -5,7 +5,8 @@ import type { ClientPageData, GetEndpointData, QwikCityEnvData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
-import { Routes } from '~/routeTypes';
+import { Endpoints } from '~/endpointTypes';
+import { HandlerTypesByEndpointAndMethod } from '~/_endpointTypes';
 
 
 export const useQwikCityEnv = () => {
@@ -13,14 +14,10 @@ export const useQwikCityEnv = () => {
 };
 
 
-// export function getContainerState(key: string, defaultValue?: any) {
-//     const ctx = useInvokeContext();
-//     return ctx.$renderCtx$.$static$.$containerState$;
-// }
 /**
  * @alpha
  */
-export const useEndpoint = <T = unknown>(route?: Routes) => {
+export const useEndpoint = <T extends Endpoints>(route?: T) => {
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
@@ -32,7 +29,7 @@ export const useEndpoint = <T = unknown>(route?: Routes) => {
         refetchSignal.value = !refetchSignal.value;
     });
 
-    const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
+    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[`${T}.${"onGet"}`]>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
@@ -48,7 +45,7 @@ export const useEndpoint = <T = unknown>(route?: Routes) => {
                 const thisPathMethods = onMethodsByPath[route!];
                 const handler = thisPathMethods?.onGet || thisPathMethods?.onRequest;
                 if (handler) {
-                    //TODO: Check if env. has the request information somewhere, the same way we have the response to return
+                    //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
                     //If not, add it. Then use it here. We'd want to pass along the original request context like headers
                     //the following argument passed into handler() is just a filler
                     return handler({ request: { headers: { "Direct from SSR": true } } });
