@@ -27,7 +27,7 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 
 export default component$(() => {
     const thisEndpoint = useEndpoint<typeof onGet>();
-    const anotherEndpoint = useEndpoint("/flower")
+    const anotherEndpoint = useEndpoint("/plainPage");
 
     const location = useLocation();
 
@@ -38,6 +38,7 @@ export default component$(() => {
 
         <hr />
         <DisplayContainer endpoint={thisEndpoint} />
+        <hr />
         <DisplayContainer endpoint={anotherEndpoint} />
     </div>
 });
@@ -58,16 +59,17 @@ export const DisplayContainer = component$(({ endpoint }: { endpoint: any }) => 
 })
 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
-
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
-            <h1>{data.title}</h1>
-            <h3>{data.description}</h3>
+            <h1>Title: {data.title}</h1>
+            <h3>Description: {data.description}</h3>
             <p>Last updated at {data.timeStamp}</p>
 
         </div>
-
-        <p>{data.price}</p>
+        <div style={{ maxWidth: "40%" }}>
+            <p>{data.price}</p>
+            <p>Raw data: {JSON.stringify(data)}</p>
+        </div>
     </div>
 })
 

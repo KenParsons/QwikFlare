@@ -12,20 +12,15 @@
  */
 import { renderToStream, RenderToStreamOptions } from '@builder.io/qwik/server';
 import { manifest } from '@qwik-client-manifest';
-import { mapOnMethods } from './mapOnMethods';
+import { getOnMethodsByPath } from './getOnMethodsByPath';
 import Root from './root';
 
-import { writeFileSync } from 'fs';
-import path from "path"
 
 export default function (opts: RenderToStreamOptions) {
-    mapOnMethods().then(map => {
-        console.log(map);
-        console.log(process.cwd());
-        const filePath = path.join(process.cwd(), "src", "routeTypes.ts");
-        const routesTypes = buildRouteTypesString(map);
-        writeFileSync(filePath, routesTypes)
-    });
+
+    //Note that this only needs to be run in dev mode since it's just type information. 
+    //Can skip it as production server to save runtime load
+    generateRouteTypes();
 
     return renderToStream(<Root />, {
         manifest,
@@ -40,13 +35,32 @@ export default function (opts: RenderToStreamOptions) {
     });
 }
 
+async function generateRouteTypes() {
+    const fs = await import('fs');
+    const path = await import('path');
 
-function buildRouteTypesString(map: Awaited<ReturnType<typeof mapOnMethods>>) {
+    getOnMethodsByPath().then(map => {
+        console.log(map);
+        const filePath = path.join(process.cwd(), "src", "routeTypes.ts");
+        const routeTypes = buildRouteTypesString(map);
+        fs.writeFileSync(filePath, routeTypes)
+    });
+}
+
+
+function buildRouteTypesString(map: Awaited<ReturnType<typeof getOnMethodsByPath>>) {
     let string = `//This is an automatically generated file. There is no need to update it manually.
 //If you added or removed a route and it's not showing here, restart your dev server 🔁
 export type Routes = `;
-    for (const key in map) {
-        string += `|"${key}"`
+    for (const route in map) {
+        const onMethods = map[route];
+        let shouldInclude = false;
+        for (const onMethod in onMethods) {
+            if (onMethod === "onGet" || onMethod === "onRequest") {
+                shouldInclude = true;
+            }
+        }
+        if (shouldInclude) { string += `|"${route}"` }
     };
     return string;
 }

@@ -4,9 +4,17 @@ type OnMethodsByPath = {
     }
 }
 
-export const mapOnMethods = async () => {
+const validOnMethods = {
+    "onGet": true,
+    "onPost": true,
+    "onPut": true,
+    "onPatch": true,
+    "onDelete": true,
+    "onResponse": true
+}
+
+export const getOnMethodsByPath = async () => {
     console.log("Mapping onMethods by path")
-    console.log(process.cwd())
     const onMethodsByPath: OnMethodsByPath = {};
     const cityPlan = await import("@qwik-city-plan");
     for (const routeData of cityPlan.routes) {
@@ -16,9 +24,12 @@ export const mapOnMethods = async () => {
         for (const getter of exportsGetters) {
             const theseExports = getter();
             for (const key in theseExports) {
-                if (key.startsWith("on")) {
-                    onMethods[key] = theseExports[key];
+
+                if (validOnMethods[(key as keyof typeof validOnMethods)]) {
+                    const theFunction = theseExports[key];
+                    onMethods[key] = theFunction
                 }
+
             }
         }
         onMethodsByPath[path] = onMethods;

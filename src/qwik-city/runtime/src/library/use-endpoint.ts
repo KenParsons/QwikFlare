@@ -4,7 +4,7 @@ import { isServer } from '@builder.io/qwik/build';
 import type { ClientPageData, GetEndpointData, QwikCityEnvData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
-import { mapOnMethods } from '~/mapOnMethods';
+import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Routes } from '~/routeTypes';
 
 
@@ -24,17 +24,17 @@ export const useEndpoint = <T = unknown>(route?: Routes) => {
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
-    const href = route ? (origin + route) : loc.href;
+    const targetHref = route ? (origin + route) : loc.href;
 
     const refetchSignal = useSignal(false);
     const refetch = $(() => {
-        invalidateCacheByHref(href);
+        invalidateCacheByHref(targetHref);
         refetchSignal.value = !refetchSignal.value;
     });
 
     const resource = useResource$<GetEndpointData<T>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
-        track(() => href);
+        track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
         track(() => refetchSignal.value);
 
@@ -43,21 +43,24 @@ export const useEndpoint = <T = unknown>(route?: Routes) => {
                 throw new Error('Endpoint response body is missing');
             }
 
-            if (loc.href !== href) {
-                const onMethodsByPath = await mapOnMethods();
+            if (loc.href !== targetHref) {
+                const onMethodsByPath = await getOnMethodsByPath();
                 const thisPathMethods = onMethodsByPath[route!];
                 const handler = thisPathMethods?.onGet || thisPathMethods?.onRequest;
                 if (handler) {
+                    //TODO: Check if env. has the request information somewhere, the same way we have the response to return
+                    //If not, add it. Then use it here. We'd want to pass along the original request context like headers
+                    //the following argument passed into handler() is just a filler
                     return handler({ request: { headers: { "Direct from SSR": true } } });
                 } else {
-                    console.warn(`Attempting to access a route without a handler function for route: ${href}. Using current page instead`)
+                    throw new Error(`Attempting to access a route without a handler: ${targetHref}`)
                 }
             }
             return env.response.body;
 
         } else {
-            const clientData = await loadClientData(href);
-            return clientData && clientData.body;
+            const clientData = await loadClientData(targetHref);
+            return clientData && clientData.body || clientData;
         }
     });
 
