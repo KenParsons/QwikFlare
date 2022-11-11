@@ -2,7 +2,7 @@
 import { component$, Resource, } from "@builder.io/qwik"
 import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
-import { onGet as flowerGet } from "~/routes/flower";
+
 
 export interface ProductDetails {
     title: string;
@@ -26,8 +26,9 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 }
 
 export default component$(() => {
-    const productEndpoint = useEndpoint<typeof onGet>();
-    const flowerEndpoint = useEndpoint<typeof flowerGet>("flower");
+    const thisEndpoint = useEndpoint<typeof onGet>();
+    const anotherEndpoint = useEndpoint("/flower")
+
     const location = useLocation();
 
     return <div>
@@ -36,8 +37,8 @@ export default component$(() => {
         <p>Sku Id: {location.params.id}</p>
 
         <hr />
-        <DisplayContainer endpoint={productEndpoint} />
-        <DisplayContainer endpoint={flowerEndpoint} />
+        <DisplayContainer endpoint={thisEndpoint} />
+        <DisplayContainer endpoint={anotherEndpoint} />
     </div>
 });
 

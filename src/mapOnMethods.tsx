@@ -6,6 +6,7 @@ type OnMethodsByPath = {
 
 export const mapOnMethods = async () => {
     console.log("Mapping onMethods by path")
+    console.log(process.cwd())
     const onMethodsByPath: OnMethodsByPath = {};
     const cityPlan = await import("@qwik-city-plan");
     for (const routeData of cityPlan.routes) {

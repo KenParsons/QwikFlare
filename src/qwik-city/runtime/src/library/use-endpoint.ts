@@ -5,6 +5,7 @@ import type { ClientPageData, GetEndpointData, QwikCityEnvData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { mapOnMethods } from '~/mapOnMethods';
+import { Routes } from '~/routeTypes';
 
 
 export const useQwikCityEnv = () => {
@@ -19,11 +20,7 @@ export const useQwikCityEnv = () => {
 /**
  * @alpha
  */
-export const useEndpoint = <T = unknown>(route?: string) => {
-    if (route && !route.startsWith("/")) {
-        route = "/" + route;
-    }
-
+export const useEndpoint = <T = unknown>(route?: Routes) => {
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
@@ -49,14 +46,14 @@ export const useEndpoint = <T = unknown>(route?: string) => {
             if (loc.href !== href) {
                 const onMethodsByPath = await mapOnMethods();
                 const thisPathMethods = onMethodsByPath[route!];
-                const handler = thisPathMethods.onGet || thisPathMethods.onRequest;
-                if (!handler) {
-                    throw new Error('Attempting to access a route without a handler function')
+                const handler = thisPathMethods?.onGet || thisPathMethods?.onRequest;
+                if (handler) {
+                    return handler({ request: { headers: { "Direct from SSR": true } } });
+                } else {
+                    console.warn(`Attempting to access a route without a handler function for route: ${href}. Using current page instead`)
                 }
-                return handler({ request: { headers: { "Direct from SSR": true } } });
-            } else {
-                return env.response.body;
             }
+            return env.response.body;
 
         } else {
             const clientData = await loadClientData(href);
