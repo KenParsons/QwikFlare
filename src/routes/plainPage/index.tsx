@@ -1,7 +1,7 @@
 import { RequestHandler } from "~/qwik-city/runtime/src";
 import { component$ } from "~/qwik/packages/qwik/dist/core";
 
-export const onGet: RequestHandler<{ test: number }> = async (requestEvent) => {
+export const onGet: RequestHandler<{ test: number }> = async () => {
     return { test: Math.random() }
 }
 

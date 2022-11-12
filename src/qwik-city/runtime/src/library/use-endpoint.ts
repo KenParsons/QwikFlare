@@ -11,7 +11,7 @@ import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
  * @alpha
  */
 
-export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint], T = void>
+export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint]>
     (route?: Endpoint, config?: { method?: Method }) => {
 
     const env = useQwikCityEnv();
@@ -22,11 +22,14 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
     const refetchSignal = useSignal(false);
 
     const refetchConfig = useSignal<null | { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }>(null);
-    const refetch = $((thisConfig?: { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }) => {
-        if (thisConfig) { refetchConfig.value = thisConfig }
-        invalidateCacheByHref(targetHref);
-        refetchSignal.value = !refetchSignal.value;
-    });
+    const refetch = $(
+        (thisConfig?:
+            { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }
+        ) => {
+            if (thisConfig) { refetchConfig.value = thisConfig }
+            invalidateCacheByHref(targetHref);
+            refetchSignal.value = !refetchSignal.value;
+        });
 
     const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
         const configToUse = refetchConfig.value || config;
@@ -62,7 +65,7 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
                     console.error(`
 ⚠ WARNING - useEndpoint() ⚠ 
 Attempting to access an invalid route + method: ${targetHref} + ${handlerKey}.
-${config? '' : '⛔ No configuration was used, so onGet was used as default.\nIf this route has no onGet, be sure to use a config (passed as 2nd argument) ⛔'}
+${config ? '' : '⛔ No configuration was used, so onGet was used as default.\nIf this route has no onGet, be sure to use a config (passed as 2nd argument) ⛔'}
 Falling back to the response data of the current page.`);
                 }
             }
