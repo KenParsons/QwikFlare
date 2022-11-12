@@ -1,13 +1,40 @@
-//This is an automatically generated file. There is no need to update it manually.
-//If you added or removed a route and it's not showing here, restart your dev server 🔁
-export type Endpoints = | "/flower" | "/plainPage" | "/sku/[...id]"
+//EXAMPLE/PLAYGROUND FILE
 
-import { onGet as _flower_onGet } from "./routes/flower"
-import { onGet as _sku_$id_onGet } from "./routes/sku/[...id]"
-import { onGet as _plainPage_onGet } from "./routes/plainPage"
+
+export type Endpoints = | "/flower" | "/plainPage" | "/api/[...route]" | "/sku/[...id]"
+
+import { onGet as endpoint0_onGet } from "./routes/flower"
+import { onGet as endpoint1_onGet } from "./routes/plainPage"
+import { onRequest as endpoint2_onRequest } from "./routes/api/[...route]"
+import { onGet as endpoint3_onGet } from "./routes/sku/[...id]"
+
 
 export type HandlerTypesByEndpointAndMethod = {
-    "/flower.onGet": typeof _flower_onGet;
-    "/sku/[...id].onGet": typeof _sku_$id_onGet;
-    "/plainPage.onGet": typeof _plainPage_onGet;
+    "/flower.get": typeof endpoint0_onGet;
+    "/plainPage.get": typeof endpoint1_onGet;
+    "/api/[...route].request": typeof endpoint2_onRequest;
+    "/sku/[...id].get": typeof endpoint3_onGet;
+}
+
+export type ValidEndpointMethods = {
+    "/flower": | "get"
+    "/plainPage": | "get"
+    "/api/[...route]": | "request"
+    "/sku/[...id]": | "get"
+}
+
+
+export type _HandlerTypesByEndpointAndMethod = {
+    "/flower": {
+        "get": typeof endpoint0_onGet
+    }
+    "/plainPage": {
+        "get": typeof endpoint1_onGet
+    }
+    "/api/[...route]": {
+        "request": typeof endpoint2_onRequest;
+    }
+    "/sku/[...id]": {
+        "get": typeof endpoint3_onGet;
+    }
 }

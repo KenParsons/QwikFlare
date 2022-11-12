@@ -1,5 +1,5 @@
 
-import { component$, Resource, useClientEffect$, } from "@builder.io/qwik"
+import { component$, Resource } from "@builder.io/qwik"
 import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 
@@ -27,16 +27,8 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 
 export default component$(() => {
     const location = useLocation();
-    const endpoint = useEndpoint("/flower");
+    const endpoint = useEndpoint("/flower", { method: "get" });
 
-    const endpointPromise = useEndpoint("/plainPage").resource.promise;
-    console.log(endpointPromise)
-
-    useClientEffect$(() => {
-        endpointPromise.then(data => {
-            console.log(data.test)
-        });
-    })
 
     return <div>
         <h1>SKU</h1>
@@ -45,12 +37,7 @@ export default component$(() => {
 
         <hr />
         <div>
-
-            <Resource value={endpoint} onResolved={(data) => <div>
-                Hi I'm also using the same data {data.timeStamp}
-                {/* <p>Headers: {data.headers}</p> */}
-            </div>}
-            />
+            <Resource value={endpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
             <button onClick$={() => endpoint.refetch()}>
                 Refetch
             </button>
@@ -58,7 +45,15 @@ export default component$(() => {
     </div>
 });
 
-// <Resource value={endpoint} onResolved={(data) => <ProductDisplay data={data} />} />
+/*
+<Resource value={endpoint.resource} onResolved={(data) => <div>
+                Hi I'm also using the same data {data.timeStamp} - {data.random}
+                <p>Headers: {data.headers}</p> }
+                </div>}
+                />
+*/
+
+// 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
@@ -73,5 +68,4 @@ export const ProductDisplay = component$(({ data }: { data: ProductDetails }) =>
         </div>
     </div>
 })
-
 

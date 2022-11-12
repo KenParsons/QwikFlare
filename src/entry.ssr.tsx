@@ -12,7 +12,7 @@
  */
 import { renderToStream, RenderToStreamOptions } from '@builder.io/qwik/server';
 import { manifest } from '@qwik-client-manifest';
-import { getOnMethodsByPath } from './getOnMethodsByPath';
+import { getOnMethodsByPath, Methods } from './getOnMethodsByPath';
 import Root from './root';
 
 
@@ -40,7 +40,6 @@ async function generateEndpointTypes() {
     const path = await import('path');
 
     getOnMethodsByPath().then(map => {
-        console.log(map);
         const filePath = path.join(process.cwd(), "src", "endpointTypes.ts");
         const routeTypes = buildRouteTypesString(map);
         fs.writeFileSync(filePath, routeTypes)
@@ -51,16 +50,70 @@ async function generateEndpointTypes() {
 function buildRouteTypesString(map: Awaited<ReturnType<typeof getOnMethodsByPath>>) {
     let string = `//This is an automatically generated file. There is no need to update it manually.
 //If you added or removed a route and it's not showing here, restart your dev server 🔁
+//(and after you may need to refresh your browser page to trigger the server as well 🔃)
 export type Endpoints = `;
-    for (const route in map) {
-        const onMethods = map[route];
-        let shouldInclude = false;
-        for (const onMethod in onMethods) {
-            if (onMethod === "onGet" || onMethod === "onRequest") {
-                shouldInclude = true;
+    const validMethodsByEndpoint: { [key: string]: Methods[] }[] = [];
+
+    for (const endpoint in map) {
+        string += `|"${endpoint}"`
+        const onMethods = Object.keys(map[endpoint]) as Methods[];
+        const endpointAndMethods: { [key: string]: Methods[] } = {};
+        endpointAndMethods[endpoint] = onMethods;
+        validMethodsByEndpoint.push(endpointAndMethods);
+    }
+
+    console.log({ validEndpoints: validMethodsByEndpoint })
+    string += "\n\n"
+
+    for (let i = 0; i < validMethodsByEndpoint.length; i++) {
+        const endpointAndMethods = validMethodsByEndpoint[i];
+        for (const endpoint in endpointAndMethods) {
+            //only one endpoint but this is the most reasonable data structure otherwise
+            //so not really a "loop" but a simple way to get the endpoint as the single key
+            const methods = endpointAndMethods[endpoint];
+            for (const method of methods) {
+                //true loop, could have one or all of the possible methods
+                string += `import {${method} as endpoint${i}_${method}} from "./routes${endpoint}"\n`
             }
         }
-        if (shouldInclude) { string += `|"${route}"` }
-    };
+    }
+
+    string += `\n\nexport type HandlerTypesByEndpointAndMethod = {\n`
+
+    for (let i = 0; i < validMethodsByEndpoint.length; i++) {
+        const endpointAndMethods = validMethodsByEndpoint[i];
+        for (const endpoint in endpointAndMethods) {
+            //only one endpoint but this is the most reasonable data structure otherwise
+            //so not really a "loop" but a simple way to get the endpoint as the single key
+            const methods = endpointAndMethods[endpoint];
+            for (const method of methods) {
+                //true loop, could have one or all of the possible methods
+                string += `"${endpoint}.${convertOnMethodToFetchMethod(method)}": typeof endpoint${i}_${method}; \n`
+            }
+        }
+    }
+    string += "}"
+
+    string += `\n\nexport type ValidEndpointMethods = {`
+
+    for (let i = 0; i < validMethodsByEndpoint.length; i++) {
+        const endpointAndMethods = validMethodsByEndpoint[i];
+        for (const endpoint in endpointAndMethods) {
+            //only one endpoint but this is the most reasonable data structure otherwise
+            //so not really a "loop" but a simple way to get the endpoint as the single key
+            string += `\n"${endpoint}":`
+            const methods = endpointAndMethods[endpoint];
+            for (const method of methods) {
+                //true loop, could have one or all of the possible methods
+                string += `| "${convertOnMethodToFetchMethod(method)}"`
+            }
+        }
+    }
+
+    string += "\n}"
     return string;
+}
+
+function convertOnMethodToFetchMethod(onMethod: string) {
+    return onMethod.slice(2).toLowerCase();
 }

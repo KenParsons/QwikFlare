@@ -1,23 +1,17 @@
-import { $, noSerialize, useEnvData, useResource$, useSignal } from '@builder.io/qwik';
-import { useLocation, } from './use-functions';
+import { $, useResource$, useSignal } from '@builder.io/qwik';
+import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
-import type { ClientPageData, GetEndpointData, QwikCityEnvData } from './types';
+import type { ClientPageData, GetEndpointData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
-import { Endpoints } from '~/endpointTypes';
-import { HandlerTypesByEndpointAndMethod } from '~/_endpointTypes';
-
-
-export const useQwikCityEnv = () => {
-    return noSerialize(useEnvData<QwikCityEnvData>('qwikcity'))
-};
-
+import { Endpoints, _HandlerTypesByEndpointAndMethod } from '~/_endpointTypes';
 
 /**
  * @alpha
  */
-export const useEndpoint = <T extends Endpoints>(route?: T) => {
+
+export const useEndpoint = <T extends Endpoints, U extends keyof _HandlerTypesByEndpointAndMethod[T]>(route?: T, config?: { method?: U }) => {
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
@@ -28,8 +22,9 @@ export const useEndpoint = <T extends Endpoints>(route?: T) => {
         invalidateCacheByHref(targetHref);
         refetchSignal.value = !refetchSignal.value;
     });
+    console.log(config);
 
-    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[`${T}.${"onGet"}`]>>(async ({ track }) => {
+    const resource = useResource$<GetEndpointData<_HandlerTypesByEndpointAndMethod[T][U]>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function

@@ -1,16 +1,18 @@
 type OnMethodsByPath = {
     [key: string]: {
-        [key: string]: Function
+        [Property in Methods]?: Function
     }
 }
 
-const validOnMethods = {
+export type Methods = "onGet" | "onPost" | "onPut" | "onPatch" | "onDelete" | "onRequest"
+
+const validOnMethods: { [Property in Methods]: boolean } = {
     "onGet": true,
     "onPost": true,
     "onPut": true,
     "onPatch": true,
     "onDelete": true,
-    "onResponse": true
+    "onRequest": true
 }
 
 export const getOnMethodsByPath = async () => {
@@ -23,16 +25,16 @@ export const getOnMethodsByPath = async () => {
         const onMethods: { [key: string]: Function } = {}
         for (const getter of exportsGetters) {
             const theseExports = getter();
-            for (const key in theseExports) {
+            for (const exportName in theseExports) {
 
-                if (validOnMethods[(key as keyof typeof validOnMethods)]) {
-                    const theFunction = theseExports[key];
-                    onMethods[key] = theFunction
+                if (validOnMethods[(exportName as keyof typeof validOnMethods)]) {
+                    const theFunction = theseExports[exportName];
+                    onMethods[exportName] = theFunction
                 }
 
             }
         }
-        onMethodsByPath[path] = onMethods;
+        if (Object.keys(onMethods).length > 0) onMethodsByPath[path] = onMethods;
     }
     return onMethodsByPath;
 }

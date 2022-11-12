@@ -12,9 +12,8 @@ export interface ProductDetails {
     random: number;
 }
 
-export const onGet: RequestHandler<ProductDetails> = async (request) => {
+export const onGet: RequestHandler<ProductDetails> = async () => {
     //pretend database fetch
-    console.log(request);
     return {
         title: "Flowers",
         description: "🌹🌷💐💐🌼🌻💐🌺🌺🌹🌼💐",
