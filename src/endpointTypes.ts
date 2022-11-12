@@ -5,7 +5,6 @@ export type Endpoints = |"/flower"|"/plainPage"|"/api/[...route]"|"/sku/[...id]"
 
 import {onGet as endpoint0_onGet} from "./routes/flower"
 import {onGet as endpoint1_onGet} from "./routes/plainPage"
-import {onGet as endpoint2_onGet} from "./routes/api/[...route]"
 import {onPost as endpoint2_onPost} from "./routes/api/[...route]"
 import {onGet as endpoint3_onGet} from "./routes/sku/[...id]"
 import {onPost as endpoint3_onPost} from "./routes/sku/[...id]"
@@ -19,7 +18,6 @@ export type HandlerTypesByEndpointAndMethod = {
 	"get": typeof endpoint1_onGet;
 };
 "/api/[...route]":{
-	"get": typeof endpoint2_onGet;
 	"post": typeof endpoint2_onPost;
 };
 "/sku/[...id]":{

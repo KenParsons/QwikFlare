@@ -13,9 +13,8 @@ export interface ProductDetails {
 
 }
 
-export const onGet: RequestHandler<ProductDetails> = async (request) => {
+export const onGet: RequestHandler<ProductDetails> = async () => {
     //pretend database fetch
-    console.log(request);
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
@@ -26,9 +25,8 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
 }
 
 
-export const onPost: RequestHandler<ProductDetails> = async (request) => {
+export const onPost: RequestHandler<ProductDetails> = async () => {
     //pretend database fetch
-    console.log(request);
     return {
         title: "Carrots",
         description: "🐰🐰🐰",
@@ -40,7 +38,7 @@ export const onPost: RequestHandler<ProductDetails> = async (request) => {
 
 export default component$(() => {
     const location = useLocation();
-    const endpoint = useEndpoint();
+    const endpoint = useEndpoint("/api/[...route]");
 
 
     return <div>
@@ -71,7 +69,7 @@ export const ProductDisplay = component$(({ data }: { data: ProductDetails }) =>
 
         </div>
         <div style={{ maxWidth: "40%" }}>
-            <p>{data.price}</p>
+            <p>Price: {data.price}</p>
             <p>Raw data: <code>{JSON.stringify(data)}</code></p>
         </div>
     </div>

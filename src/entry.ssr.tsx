@@ -62,7 +62,6 @@ export type Endpoints = `;
         validMethodsByEndpoint.push(endpointAndMethods);
     }
 
-    console.log({ validEndpoints: validMethodsByEndpoint })
     string += "\n\n"
 
     for (let i = 0; i < validMethodsByEndpoint.length; i++) {

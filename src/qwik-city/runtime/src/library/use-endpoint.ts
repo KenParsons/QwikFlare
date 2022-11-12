@@ -11,8 +11,7 @@ import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
  * @alpha
  */
 
-
-export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint]>
+export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint], T = void>
     (route?: Endpoint, config?: { method?: Method }) => {
 
     const env = useQwikCityEnv();
@@ -29,10 +28,6 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
         refetchSignal.value = !refetchSignal.value;
     });
 
-
-    refetchConfig.value
-
-    console.log(config, refetchConfig.value);
     const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
         const configToUse = refetchConfig.value || config;
         //this should only be necessary client side, right? could probably move it down to that else block 
@@ -54,7 +49,6 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
 
                 const thisMethodString = configToUse?.method ? configToUse.method.toString() : "";
                 const thisHandlerKey = thisMethodString ? ("on" + thisMethodString[0].toUpperCase() + thisMethodString.slice(1)) : null;
-                console.log({ thisHandlerKey })
                 const handlerKey = (thisHandlerKey || "onGet") as keyof typeof thisPathMethods;
                 const handler = thisPathMethods[handlerKey] || thisPathMethods?.onRequest;
                 if (handler) {
@@ -65,7 +59,11 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
                 } else {
                     //Typesafety should prevent this. And we dont' want to throw an error because it stops
                     //The type generation from happening which is very annoying DX. 
-                    console.error(`Attempting to access an invalid route + method: ${targetHref}`)
+                    console.error(`
+⚠ WARNING - useEndpoint() ⚠ 
+Attempting to access an invalid route + method: ${targetHref} + ${handlerKey}.
+${config? '' : '⛔ No configuration was used, so onGet was used as default.\nIf this route has no onGet, be sure to use a config (passed as 2nd argument) ⛔'}
+Falling back to the response data of the current page.`);
                 }
             }
             return env.response.body;
@@ -110,7 +108,7 @@ export const loadClientData = async (href: string, config?: any) => {
             c: new Promise<ClientPageData | null>((resolve) => {
                 console.log({ config })
                 //TODO: config may not be 1 to 1 to fetch's settings, so a conversion has to happen
-                fetch(endpointUrl, config).then(
+                fetch(endpointUrl, { ...config }).then(
                     (clientResponse) => {
                         const contentType = clientResponse.headers.get('content-type') || '';
                         if (clientResponse.ok && contentType.includes('json')) {
