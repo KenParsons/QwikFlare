@@ -11,20 +11,32 @@ import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
  * @alpha
  */
 
-export const useEndpoint = <T extends Endpoints, U extends keyof HandlerTypesByEndpointAndMethod[T]>(route?: T, config?: { method?: U }) => {
+
+export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint]>
+    (route?: Endpoint, config?: { method?: Method }) => {
+
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
     const targetHref = route ? (origin + route) : loc.href;
 
     const refetchSignal = useSignal(false);
-    const refetch = $(() => {
+
+    const refetchConfig = useSignal<null | { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }>(null);
+    const refetch = $((thisConfig?: { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }) => {
+        if (thisConfig) { refetchConfig.value = thisConfig }
         invalidateCacheByHref(targetHref);
         refetchSignal.value = !refetchSignal.value;
     });
-    console.log(config);
 
-    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[T][U]>>(async ({ track }) => {
+
+    refetchConfig.value
+
+    console.log(config, refetchConfig.value);
+    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
+        const configToUse = refetchConfig.value || config;
+        //this should only be necessary client side, right? could probably move it down to that else block 
+
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
@@ -35,23 +47,32 @@ export const useEndpoint = <T extends Endpoints, U extends keyof HandlerTypesByE
                 throw new Error('Endpoint response body is missing');
             }
 
+            //TODO: Handle/convert the config options beyond just method type
             if (loc.href !== targetHref) {
                 const onMethodsByPath = await getOnMethodsByPath();
                 const thisPathMethods = onMethodsByPath[route!];
-                const handler = thisPathMethods?.onGet || thisPathMethods?.onRequest;
+
+                const thisMethodString = configToUse?.method ? configToUse.method.toString() : "";
+                const thisHandlerKey = thisMethodString ? ("on" + thisMethodString[0].toUpperCase() + thisMethodString.slice(1)) : null;
+                console.log({ thisHandlerKey })
+                const handlerKey = (thisHandlerKey || "onGet") as keyof typeof thisPathMethods;
+                const handler = thisPathMethods[handlerKey] || thisPathMethods?.onRequest;
                 if (handler) {
+                    return handler({ request: { headers: { "Direct from SSR": true } } });
                     //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
                     //If not, add it. Then use it here. We'd want to pass along the original request context like headers
-                    //the following argument passed into handler() is just a filler
-                    return handler({ request: { headers: { "Direct from SSR": true } } });
+                    //the above argument passed into handler() is just a filler
                 } else {
-                    throw new Error(`Attempting to access a route without a handler: ${targetHref}`)
+                    //Typesafety should prevent this. And we dont' want to throw an error because it stops
+                    //The type generation from happening which is very annoying DX. 
+                    console.error(`Attempting to access an invalid route + method: ${targetHref}`)
                 }
             }
             return env.response.body;
 
         } else {
-            const clientData = await loadClientData(targetHref);
+            const clientData = await loadClientData(targetHref, configToUse);
+            refetchConfig.value = null;
             return clientData && clientData.body || clientData;
         }
     });
@@ -66,7 +87,8 @@ export const invalidateCacheByHref = (href: string) => {
     cachedClientPages.splice(index, 1);
 }
 
-export const loadClientData = async (href: string) => {
+export const loadClientData = async (href: string, config?: any) => {
+
     const { cacheModules } = await import('@qwik-city-plan');
     const pagePathname = new URL(href).pathname;
     const endpointUrl = getClientEndpointPath(pagePathname);
@@ -86,7 +108,9 @@ export const loadClientData = async (href: string) => {
             u: endpointUrl,
             t: now,
             c: new Promise<ClientPageData | null>((resolve) => {
-                fetch(endpointUrl).then(
+                console.log({ config })
+                //TODO: config may not be 1 to 1 to fetch's settings, so a conversion has to happen
+                fetch(endpointUrl, config).then(
                     (clientResponse) => {
                         const contentType = clientResponse.headers.get('content-type') || '';
                         if (clientResponse.ok && contentType.includes('json')) {

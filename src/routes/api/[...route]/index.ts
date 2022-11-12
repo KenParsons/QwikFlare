@@ -5,6 +5,6 @@ export const onGet: RequestHandler<{ test: number }> = async () => {
     return { test: Math.random() }
 }
 
-export const onRequest: RequestHandler<{ test: string }> = async () => {
-    return { test: Math.random().toString() }
+export const onPost: RequestHandler<{ test: string }> = async () => {
+    return { test: "from post " + Math.random().toString() }
 }

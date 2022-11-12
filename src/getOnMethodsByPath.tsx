@@ -16,10 +16,9 @@ const validOnMethods: { [Property in Methods]: boolean } = {
 }
 
 export const getOnMethodsByPath = async () => {
-    console.log("Mapping onMethods by path")
     const onMethodsByPath: OnMethodsByPath = {};
     const cityPlan = await import("@qwik-city-plan");
-    for (const routeData of cityPlan.routes) {
+    for (const routeData of cityPlan.routes) {        
         const [regex, exportsGetters, routeParams, path, qrls] = routeData;
 
         const onMethods: { [key: string]: Function } = {}
@@ -34,7 +33,8 @@ export const getOnMethodsByPath = async () => {
 
             }
         }
-        if (Object.keys(onMethods).length > 0) onMethodsByPath[path] = onMethods;
+        const hasAtLeastOneOnMethod = Object.keys(onMethods).length > 0
+        if (hasAtLeastOneOnMethod) onMethodsByPath[path] = onMethods;
     }
     return onMethodsByPath;
 }

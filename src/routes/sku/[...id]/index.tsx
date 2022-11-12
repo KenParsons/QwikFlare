@@ -30,9 +30,9 @@ export const onPost: RequestHandler<ProductDetails> = async (request) => {
     //pretend database fetch
     console.log(request);
     return {
-        title: "Serenity",
-        description: "A moment of solace in today's crazy world",
-        price: "Priceless",
+        title: "Carrots",
+        description: "🐰🐰🐰",
+        price: "$4",
         timeStamp: (new Date()).toLocaleTimeString(),
         random: Math.random(),
     }
@@ -40,7 +40,7 @@ export const onPost: RequestHandler<ProductDetails> = async (request) => {
 
 export default component$(() => {
     const location = useLocation();
-    const endpoint = useEndpoint("/sku/[...id]", { method: "post" });
+    const endpoint = useEndpoint();
 
 
     return <div>
@@ -51,22 +51,17 @@ export default component$(() => {
         <hr />
         <div>
             <Resource value={endpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
+            <button onClick$={() => endpoint.refetch({ method: "post" })}>
+                Refetch Post Request
+            </button>
+            <div></div>
             <button onClick$={() => endpoint.refetch()}>
-                Refetch
+                Refetch no config (will use initial config)
             </button>
         </div>
     </div>
 });
 
-/*
-<Resource value={endpoint.resource} onResolved={(data) => <div>
-                Hi I'm also using the same data {data.timeStamp} - {data.random}
-                <p>Headers: {data.headers}</p> }
-                </div>}
-                />
-*/
-
-// 
 export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
@@ -77,7 +72,7 @@ export const ProductDisplay = component$(({ data }: { data: ProductDetails }) =>
         </div>
         <div style={{ maxWidth: "40%" }}>
             <p>{data.price}</p>
-            <p>Raw data: {JSON.stringify(data)}</p>
+            <p>Raw data: <code>{JSON.stringify(data)}</code></p>
         </div>
     </div>
 })
