@@ -25,9 +25,22 @@ export const onGet: RequestHandler<ProductDetails> = async (request) => {
     }
 }
 
+
+export const onPost: RequestHandler<ProductDetails> = async (request) => {
+    //pretend database fetch
+    console.log(request);
+    return {
+        title: "Serenity",
+        description: "A moment of solace in today's crazy world",
+        price: "Priceless",
+        timeStamp: (new Date()).toLocaleTimeString(),
+        random: Math.random(),
+    }
+}
+
 export default component$(() => {
     const location = useLocation();
-    const endpoint = useEndpoint("/flower", { method: "get" });
+    const endpoint = useEndpoint("/sku/[...id]", { method: "post" });
 
 
     return <div>

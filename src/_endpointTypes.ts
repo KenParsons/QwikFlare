@@ -16,25 +16,17 @@ export type HandlerTypesByEndpointAndMethod = {
     "/sku/[...id].get": typeof endpoint3_onGet;
 }
 
-export type ValidEndpointMethods = {
-    "/flower": | "get"
-    "/plainPage": | "get"
-    "/api/[...route]": | "request"
-    "/sku/[...id]": | "get"
-}
-
-
 export type _HandlerTypesByEndpointAndMethod = {
     "/flower": {
         "get": typeof endpoint0_onGet
-    }
+    };
     "/plainPage": {
         "get": typeof endpoint1_onGet
-    }
+    };
     "/api/[...route]": {
         "request": typeof endpoint2_onRequest;
-    }
+    };
     "/sku/[...id]": {
         "get": typeof endpoint3_onGet;
-    }
+    };
 }

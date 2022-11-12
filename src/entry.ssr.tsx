@@ -83,34 +83,19 @@ export type Endpoints = `;
     for (let i = 0; i < validMethodsByEndpoint.length; i++) {
         const endpointAndMethods = validMethodsByEndpoint[i];
         for (const endpoint in endpointAndMethods) {
+            string += `"${endpoint}":{\n`
             //only one endpoint but this is the most reasonable data structure otherwise
             //so not really a "loop" but a simple way to get the endpoint as the single key
             const methods = endpointAndMethods[endpoint];
             for (const method of methods) {
                 //true loop, could have one or all of the possible methods
-                string += `"${endpoint}.${convertOnMethodToFetchMethod(method)}": typeof endpoint${i}_${method}; \n`
+                string += `\t"${convertOnMethodToFetchMethod(method)}": typeof endpoint${i}_${method};\n`
             }
+            string += "};\n"
         }
     }
     string += "}"
 
-    string += `\n\nexport type ValidEndpointMethods = {`
-
-    for (let i = 0; i < validMethodsByEndpoint.length; i++) {
-        const endpointAndMethods = validMethodsByEndpoint[i];
-        for (const endpoint in endpointAndMethods) {
-            //only one endpoint but this is the most reasonable data structure otherwise
-            //so not really a "loop" but a simple way to get the endpoint as the single key
-            string += `\n"${endpoint}":`
-            const methods = endpointAndMethods[endpoint];
-            for (const method of methods) {
-                //true loop, could have one or all of the possible methods
-                string += `| "${convertOnMethodToFetchMethod(method)}"`
-            }
-        }
-    }
-
-    string += "\n}"
     return string;
 }
 

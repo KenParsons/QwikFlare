@@ -5,13 +5,13 @@ import type { ClientPageData, GetEndpointData } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
-import { Endpoints, _HandlerTypesByEndpointAndMethod } from '~/_endpointTypes';
+import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 
 /**
  * @alpha
  */
 
-export const useEndpoint = <T extends Endpoints, U extends keyof _HandlerTypesByEndpointAndMethod[T]>(route?: T, config?: { method?: U }) => {
+export const useEndpoint = <T extends Endpoints, U extends keyof HandlerTypesByEndpointAndMethod[T]>(route?: T, config?: { method?: U }) => {
     const env = useQwikCityEnv();
     const loc = useLocation();
     const origin = new URL(loc.href).origin
@@ -24,7 +24,7 @@ export const useEndpoint = <T extends Endpoints, U extends keyof _HandlerTypesBy
     });
     console.log(config);
 
-    const resource = useResource$<GetEndpointData<_HandlerTypesByEndpointAndMethod[T][U]>>(async ({ track }) => {
+    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[T][U]>>(async ({ track }) => {
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
