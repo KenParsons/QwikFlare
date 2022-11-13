@@ -9,11 +9,13 @@ export interface ProductDetails {
     price: string;
     timeStamp: string;
     random: number;
-
 }
 
-export const onGet: RequestHandler<ProductDetails> = async () => {
-    //pretend database fetch
+
+export const onGet: RequestHandler<ProductDetails, { id: string }> = async (requestEvent) => {
+    console.log(requestEvent);
+    requestEvent.inputs.id
+
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
@@ -23,28 +25,21 @@ export const onGet: RequestHandler<ProductDetails> = async () => {
     }
 }
 
-
-export const onPost: RequestHandler<{test: "hi"}> = async () => {
-    //pretend database fetch
-    return { 
-        test: "hi"
-    }
-    // return {
-    //     title: "Carrots",
-    //     description: "🐰🐰🐰",
-    //     price: "$4",
-    //     timeStamp: (new Date()).toLocaleTimeString(),
-    //     random: Math.random(),
-    // }
-}
-
 export default component$(() => {
     const location = useLocation();
 
-    const endpoint = useEndpoint("/sku/[...id]", {method: "get"});
+
+    const endpoint = useEndpoint("/sku/[...id]", {
+        method: "get",
+        inputs: {
+            
+        }
+    });
+
+
     console.log(endpoint.resource.promise);
 
-    useClientEffect$(async ()=> { 
+    useClientEffect$(async () => {
         const data = await endpoint.resource.promise;
         console.log(data)
     })
@@ -68,7 +63,7 @@ export default component$(() => {
                 Refetch Post Request
             </button>
             <div></div>
-            
+
 
         </div>
 

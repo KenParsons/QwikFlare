@@ -1,7 +1,7 @@
 import { $, useResource$, useSignal } from '@builder.io/qwik';
 import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
-import type { ClientPageData, GetEndpointData } from './types';
+import type { ClientPageData, GetEndpointData, EndpointMethodInputs } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
@@ -11,8 +11,20 @@ import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
  * @alpha
  */
 
-export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint]>
-    (route?: Endpoint, config?: { method?: Method }) => {
+export const useEndpoint = <
+    Endpoint extends Endpoints,
+    Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint],
+    Inputs = EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>
+>
+    (
+        route?: Endpoint,
+        config?: {
+            method?: Method,
+            inputs?: Inputs
+        } &
+            Omit<RequestInit, "method" | "body">,
+
+    ) => {
 
     const env = useQwikCityEnv();
     const loc = useLocation();
@@ -21,15 +33,17 @@ export const useEndpoint = <Endpoint extends Endpoints, Method extends keyof Han
 
     const refetchSignal = useSignal(false);
 
-    const refetchConfig = useSignal<null | { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }>(null);
-    const refetch = $(
-        (thisConfig?:
-            { method?: keyof HandlerTypesByEndpointAndMethod[Endpoint] }
-        ) => {
-            if (thisConfig) { refetchConfig.value = thisConfig }
-            invalidateCacheByHref(targetHref);
-            refetchSignal.value = !refetchSignal.value;
-        });
+    interface RefetchConfig extends Omit<RequestInit, "method" | "body"> {
+        method?: keyof HandlerTypesByEndpointAndMethod[Endpoint]
+        body?: any
+    }
+    const refetchConfig = useSignal<null | RefetchConfig>(null);
+    const refetch = $((thisConfig?: RefetchConfig) => {
+        if (thisConfig) { refetchConfig.value = thisConfig }
+        invalidateCacheByHref(targetHref);
+        refetchSignal.value = !refetchSignal.value;
+    });
+
 
     const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
         const configToUse = refetchConfig.value || config;
@@ -111,6 +125,7 @@ export const loadClientData = async (href: string, config?: any) => {
             c: new Promise<ClientPageData | null>((resolve) => {
                 console.log({ config })
                 //TODO: config may not be 1 to 1 to fetch's settings, so a conversion has to happen
+                console.log(config);
                 fetch(endpointUrl, { ...config }).then(
                     (clientResponse) => {
                         const contentType = clientResponse.headers.get('content-type') || '';

@@ -173,12 +173,12 @@ export type RouteData =
   | [pattern: RegExp, loaders: ModuleLoader[]]
   | [pattern: RegExp, loaders: ModuleLoader[], paramNames: string[]]
   | [
-      pattern: RegExp,
-      loaders: ModuleLoader[],
-      paramNames: string[],
-      originalPathname: string,
-      routeBundleNames: string[]
-    ];
+    pattern: RegExp,
+    loaders: ModuleLoader[],
+    paramNames: string[],
+    originalPathname: string,
+    routeBundleNames: string[]
+  ];
 
 export type FallbackRouteData =
   | [pattern: RegExp, loaders: ModuleLoader[]]
@@ -270,17 +270,20 @@ export interface ResponseContext {
 /**
  * @alpha
  */
-export interface RequestEvent {
+export interface RequestEvent<INPUTS extends { [key: string]: any } | undefined> {
   request: RequestContext;
   response: ResponseContext;
   url: URL;
 
+  /** Used along with useEndpoint for end-to-end type safety */
+  inputs: INPUTS;
+
   /** URL Route params which have been parsed from the current url pathname. */
   params: RouteParams;
 
+
   /** Platform specific data and functions */
   platform: Record<string, any>;
-
   next: () => Promise<void>;
   abort: () => void;
 }
@@ -290,10 +293,15 @@ export interface RequestEvent {
  */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
+
+
 /**
  * @alpha
  */
-export type RequestHandler<BODY = unknown> = (ev: RequestEvent) => RequestHandlerResult<BODY>;
+export type RequestHandler<
+  BODY = unknown,
+  Inputs extends { [key: string]: any } | undefined = undefined
+> = (ev: RequestEvent<Inputs>) => RequestHandlerResult<BODY>;
 
 /**
  * @alpha
@@ -331,14 +339,18 @@ export interface StaticGenerate {
   params?: RouteParams[];
 }
 
-export interface QwikCityRenderDocument extends Document {}
+export interface QwikCityRenderDocument extends Document { }
 
 export interface QwikCityEnvData {
   params: RouteParams;
   response: EndpointResponse;
 }
 
-export type GetEndpointData<T> = T extends RequestHandler<infer U> ? U : T;
+//We want to throw away the INPUTS part of the Request Handler but pass along the BODY. 
+//This works perfectly but not sure what to do with this leftover X to stop it from erroring
+export type GetEndpointData<T> = T extends RequestHandler<infer U, infer X> ? U : T;
+
+export type EndpointMethodInputs<T> = T extends RequestHandler<infer U, infer X> ? X : undefined;
 
 export interface SimpleURL {
   origin: string;
