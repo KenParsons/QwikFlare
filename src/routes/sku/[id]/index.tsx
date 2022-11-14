@@ -13,53 +13,29 @@ export interface ProductDetails {
     random: number;
 }
 
-export interface PersonSearchInputs { name?: string, age?: number }
+export interface PersonSearchInputs { name?: string, age?: number, notes?: string }
 
 export const onGet: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
-    console.log('inputs', requestEvent.inputs)
+    const { name, age, notes } = requestEvent.inputs;
     return {
-        title: "Serenity" + " " + requestEvent.url,
-        description: "A moment of solace in today's crazy world",
-        price: "Priceless",
+        title: "Serenity " + (name || ""),
+        description: notes || "",
+        price: "Age: " + (age || ""),
         timeStamp: (new Date()).toLocaleTimeString(),
         random: Math.random()
     }
 }
-
-
-export const onPost: RequestHandler<ProductDetails, { almostThere: string }> = async (requestEvent) => {
-    // const { name, age } = requestEvent.inputs
-    console.log(requestEvent.inputs)
-    return {
-        title: "Sasdfasdfasdf" + " " + requestEvent.url,
-        description: "2fhawfj",
-        price: "$12389128",
-        timeStamp: (new Date()).toLocaleTimeString(),
-        random: Math.random()
-    }
-}
-
-
 
 export default component$(() => {
     const location = useLocation();
-
-    const userFirstName = "Marcos"
-    const userAge = 23423
-
-    const endpoint = useEndpoint("/sku/[id]", {
-        inputs: {
-            age: 2352,
-            name: "Josh",
-            test: { hi: "weee" }
-        }
-    });
-
+    const endpoint = useEndpoint("/sku/[id]", { method: "get", inputs: { name: "Josh", notes: "asdfasdf" } });
 
     useClientEffect$(async () => {
         const data = await endpoint.resource.promise;
+        console.log(data);
 
     })
+
 
     return <div>
         <h1>SKU</h1>
@@ -70,19 +46,26 @@ export default component$(() => {
 
         <div>
             <Resource value={endpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
+            <button onClick$={() => endpoint.refetch({ inputs: { name: "hey", notes: "asdfasdf",} })}>
+                Refetch no config
+            </button>
+
             <button onClick$={() => endpoint.refetch({
-                method: "post", inputs: {
-                    name: "asdfjasdfasdf", test: { hi: "weeeeee!" }, age: 324234
+                method: "get",
+                inputs: {
+                    name: "The Ancient One",
+                    notes: "We out here",
+                    
                 }
             })}>
-                Refetch post
+                Refetch still get though, but new config
             </button>
 
         </div>
     </div>
 });
 
-export const ProductDisplay = component$(({ data }: { data: ProductDetails }) => {
+export const ProductDisplay = component$(({ data }: { data: Partial<ProductDetails> }) => {
     return <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
             <h1>Title: {data.title}</h1>

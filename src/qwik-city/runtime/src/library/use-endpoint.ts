@@ -42,7 +42,7 @@ export const useEndpoint = <
         & Omit<RequestInit, "method" | "body">
 
     const refetchConfig = useSignal<null | RefetchConfig>(null);
-    const refetch = $((thisConfig?: RefetchConfig) => {
+    const refetch = $((thisConfig: RefetchConfig) => {
         if (thisConfig) { refetchConfig.value = thisConfig }
         invalidateCacheByHref(targetHref);
         refetchSignal.value = !refetchSignal.value;
@@ -179,7 +179,8 @@ export const loadClientData = async (href: string, config?: any) => {
                 //We'll pass the search in because that will only exist we're fetching the same location that we're on. 
                 //And even still, any inputs from the config should override those since they were explicitly requested in useEndpoint. 
                 let queryParams = "?";
-                if (!config.method || config.method === "get" || config.method === "request") {
+                if (!config?.method || config.method === "get" || config.method === "request") {
+                    config = config || {}
                     config.inputs = config.inputs || {};
                     urlFromHref.searchParams.forEach((value, key) => {
                         //note that we're checking that it's not already on config, thus deferring to config first
