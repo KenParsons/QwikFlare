@@ -350,6 +350,7 @@ export interface QwikCityEnvData {
 //This works perfectly but not sure what to do with this leftover X to stop it from erroring
 export type GetEndpointData<T> = T extends RequestHandler<infer U, infer X> ? U : T;
 
+
 export type EndpointMethodInputs<T> = T extends RequestHandler<infer U, infer X> ? X : undefined;
 
 export interface SimpleURL {

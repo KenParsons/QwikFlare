@@ -20,7 +20,8 @@ export const useEndpoint = <
         route?: Endpoint,
         config?: {
             method?: Method,
-            inputs?: Inputs
+            inputs?: Inputs,
+            body?: string
         } &
             Omit<RequestInit, "method" | "body">,
 
@@ -35,7 +36,7 @@ export const useEndpoint = <
 
     interface RefetchConfig extends Omit<RequestInit, "method" | "body"> {
         method?: keyof HandlerTypesByEndpointAndMethod[Endpoint]
-        body?: any
+        body?: string
     }
     const refetchConfig = useSignal<null | RefetchConfig>(null);
     const refetch = $((thisConfig?: RefetchConfig) => {
