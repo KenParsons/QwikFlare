@@ -1,14 +1,15 @@
 import { $, useResource$, useSignal } from '@builder.io/qwik';
 import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
-import type { ClientPageData, GetEndpointData, EndpointMethodInputs } from './types';
+import type { ClientPageData, GetEndpointData, EndpointMethodInputs, RouteLocation } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
+import { url } from 'inspector';
+
 
 type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {};
-
 /**
  * @alpha
  */
@@ -25,7 +26,6 @@ export const useEndpoint = <
         }
             & InputsIfExists<Inputs>
             & Omit<RequestInit, "method" | "body">,
-
     ) => {
 
     const env = useQwikCityEnv();
@@ -35,10 +35,12 @@ export const useEndpoint = <
 
     const refetchSignal = useSignal(false);
 
-    interface RefetchConfig extends Omit<RequestInit, "method" | "body"> {
-        method?: keyof HandlerTypesByEndpointAndMethod[Endpoint]
+    type RefetchConfig = {
+        method?: Method,
         body?: string
-    }
+    } & InputsIfExists<Inputs>
+        & Omit<RequestInit, "method" | "body">
+
     const refetchConfig = useSignal<null | RefetchConfig>(null);
     const refetch = $((thisConfig?: RefetchConfig) => {
         if (thisConfig) { refetchConfig.value = thisConfig }
@@ -56,17 +58,20 @@ export const useEndpoint = <
         // fetch() for new data when user triggers a manual refetch() function
         track(() => refetchSignal.value);
 
+        const sameRoute = isSameRoute(route!, loc.pathname)
+
         if (isServer) {
             if (!env) {
                 throw new Error('Endpoint response body is missing');
             }
 
-            if (!isSameRoute(route!, loc.pathname)) {
+            if (!sameRoute) {
                 const onMethodsByPath = await getOnMethodsByPath();
                 const thisPathMethods = onMethodsByPath[route!];
 
                 const thisMethodString = configToUse?.method ? configToUse.method.toString() : "";
                 const thisHandlerKey = thisMethodString ? ("on" + thisMethodString[0].toUpperCase() + thisMethodString.slice(1)) : null;
+
                 const handlerKey = (thisHandlerKey || "onGet") as keyof typeof thisPathMethods;
                 const handler = thisPathMethods[handlerKey] || thisPathMethods?.onRequest;
                 if (handler) {
@@ -74,20 +79,16 @@ export const useEndpoint = <
                     //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
                     //If not, add it. Then use it here. We'd want to pass along the original request context like headers
                     //the above argument passed into handler() is just a filler
+                    //adding query params in to url is good idea as well? have to preserve them somehow.
                 } else {
-                    //Typesafety should prevent this. And we dont' want to throw an error because it stops
-                    //The type generation from happening which is very annoying DX. 
-                    console.error(`
-⚠ WARNING - useEndpoint() ⚠ 
-Attempting to access an invalid route + method: ${targetHref} + ${handlerKey}.
-${config ? '' : '⛔ No configuration was used, so onGet was used as default.\nIf this route has no onGet, be sure to use a config (passed as 2nd argument) ⛔'}
-Falling back to the response data of the current page.`);
+                    warnInvalidPathAndMethod(targetHref, handlerKey, config)
                 }
             }
             return env.response.body;
 
         } else {
-            const clientData = await loadClientData(targetHref, configToUse);
+            const hrefToUse = sameRoute ? loc.href : targetHref; //preserve route & query params if fetching data from same page currently located on
+            const clientData = await loadClientData(hrefToUse, configToUse);
             refetchConfig.value = null;
             return clientData && clientData.body || clientData;
         }
@@ -95,6 +96,14 @@ Falling back to the response data of the current page.`);
 
     return { resource, refetch }
 };
+
+export const warnInvalidPathAndMethod = (targetHref: string, handlerKey: string, config: any) => {
+    console.warn(`
+⚠ WARNING - useEndpoint() ⚠ 
+Attempting to access an invalid route + method: ${targetHref} + ${handlerKey}.
+${config ? '' : '⛔ No configuration was used, so onGet was used as default.\nIf this route has no onGet, be sure to use a config (passed as 2nd argument) ⛔'}
+Falling back to the response data of the current page.`);
+}
 
 export const isSameRoute = (targetPath: string, currentPath: string) => {
     /*
@@ -137,7 +146,6 @@ export const isSameRoute = (targetPath: string, currentPath: string) => {
     return true;
 }
 
-
 export const invalidateCacheByHref = (href: string) => {
     const pagePathname = new URL(href).pathname;
     const endpointUrl = getClientEndpointPath(pagePathname);
@@ -148,7 +156,8 @@ export const invalidateCacheByHref = (href: string) => {
 export const loadClientData = async (href: string, config?: any) => {
 
     const { cacheModules } = await import('@qwik-city-plan');
-    const pagePathname = new URL(href).pathname;
+    const urlFromHref = new URL(href);
+    const pagePathname = urlFromHref.pathname;
     const endpointUrl = getClientEndpointPath(pagePathname);
     const now = Date.now();
     const expiration = cacheModules ? 600000 : 15000;
@@ -166,8 +175,27 @@ export const loadClientData = async (href: string, config?: any) => {
             u: endpointUrl,
             t: now,
             c: new Promise<ClientPageData | null>((resolve) => {
-                //TODO: config will not be 1 to 1 to fetch's settings, so a conversion has to happen
-                fetch(endpointUrl, { ...config }).then(
+                //TODO: config will not be 1 to 1 to fetch's settings, so a conversion has to happen;
+                //We'll pass the search in because that will only exist we're fetching the same location that we're on. 
+                //And even still, any inputs from the config should override those since they were explicitly requested in useEndpoint. 
+                let queryParams = "?";
+                if (!config.method || config.method === "get" || config.method === "request") {
+                    config.inputs = config.inputs || {};
+                    urlFromHref.searchParams.forEach((value, key) => {
+                        //note that we're checking that it's not already on config, thus deferring to config first
+                        if (!config.inputs[key]) config.inputs[key] = value;
+                    })
+                    for (const key in config.inputs) {
+                        const value = config.inputs[key];
+                        const stringified = (typeof (value) === "object") ? JSON.stringify(value) : value;
+                        queryParams += `${key}=${stringified}&`
+                    }
+                    queryParams = queryParams.slice(0, -1) //trailing &
+                } else {
+                    queryParams = urlFromHref.search
+                }
+
+                fetch(endpointUrl + queryParams, { ...config }).then(
                     (clientResponse) => {
                         const contentType = clientResponse.headers.get('content-type') || '';
                         if (clientResponse.ok && contentType.includes('json')) {

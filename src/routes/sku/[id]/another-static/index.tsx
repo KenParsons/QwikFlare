@@ -15,7 +15,7 @@ export interface ProductDetails {
 
 export interface PersonSearchInputs { name?: string, age?: number }
 
-export const onGet: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
+export const onGet: RequestHandler<ProductDetails> = async (requestEvent) => {
     // console.log(requestEvent.url);
     const test = requestEvent.url
 

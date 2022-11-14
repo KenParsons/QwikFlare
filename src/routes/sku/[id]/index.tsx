@@ -16,11 +16,9 @@ export interface ProductDetails {
 export interface PersonSearchInputs { name?: string, age?: number }
 
 export const onGet: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
-    console.log(requestEvent);
-    const test = requestEvent.url
-
+    console.log('inputs', requestEvent.inputs)
     return {
-        title: "Serenity" + " " + test,
+        title: "Serenity" + " " + requestEvent.url,
         description: "A moment of solace in today's crazy world",
         price: "Priceless",
         timeStamp: (new Date()).toLocaleTimeString(),
@@ -29,11 +27,11 @@ export const onGet: RequestHandler<ProductDetails, PersonSearchInputs> = async (
 }
 
 
-export const onPost: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
+export const onPost: RequestHandler<ProductDetails, { almostThere: string }> = async (requestEvent) => {
     // const { name, age } = requestEvent.inputs
-
+    console.log(requestEvent.inputs)
     return {
-        title: "Sasdfasdfasdf",
+        title: "Sasdfasdfasdf" + " " + requestEvent.url,
         description: "2fhawfj",
         price: "$12389128",
         timeStamp: (new Date()).toLocaleTimeString(),
@@ -49,17 +47,18 @@ export default component$(() => {
     const userFirstName = "Marcos"
     const userAge = 23423
 
-
-
     const endpoint = useEndpoint("/sku/[id]", {
-        method: "get",
-        inputs: { name: "josh", age: 238428 }
+        inputs: {
+            age: 2352,
+            name: "Josh",
+            test: { hi: "weee" }
+        }
     });
 
 
     useClientEffect$(async () => {
         const data = await endpoint.resource.promise;
-        console.log(data)
+
     })
 
     return <div>
@@ -71,8 +70,12 @@ export default component$(() => {
 
         <div>
             <Resource value={endpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
-            <button onClick$={() => endpoint.refetch()}>
-                Refetch no config (will use initial config)
+            <button onClick$={() => endpoint.refetch({
+                method: "post", inputs: {
+                    name: "asdfjasdfasdf", test: { hi: "weeeeee!" }, age: 324234
+                }
+            })}>
+                Refetch post
             </button>
 
         </div>
