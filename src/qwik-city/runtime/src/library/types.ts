@@ -352,10 +352,6 @@ export type GetEndpointData<T> = T extends RequestHandler<infer U, infer X> ? U 
 //Exact same idea just vice-versa for the INPUTS vs BODY
 export type EndpointMethodInputs<T> = T extends RequestHandler<infer U, infer X> ? X : undefined;
 
-//type Arg1<T extends Function> = T extends (a1: infer A1) => any ? A1 : never;
-
-
-
 export interface SimpleURL {
   origin: string;
   href: string;
