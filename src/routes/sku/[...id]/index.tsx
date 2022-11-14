@@ -12,10 +12,10 @@ export interface ProductDetails {
 }
 
 
-export const onGet: RequestHandler<ProductDetails, { id: string }> = async (requestEvent) => {
+export const onGet: RequestHandler<ProductDetails, { name: string }> = async (requestEvent) => {
     console.log(requestEvent);
-
-
+    
+    requestEvent.inputs
     return {
         title: "Serenity",
         description: "A moment of solace in today's crazy world",
@@ -28,11 +28,13 @@ export const onGet: RequestHandler<ProductDetails, { id: string }> = async (requ
 export default component$(() => {
     const location = useLocation();
 
+    const userFirstName = "Marcos"
+    
 
     const endpoint = useEndpoint("/sku/[...id]", {
         method: "get",
         inputs: {
-            id: "aswdfasdf"
+            name: userFirstName
         }
     });
 

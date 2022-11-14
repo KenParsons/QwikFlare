@@ -275,7 +275,15 @@ export interface RequestEvent<INPUTS extends { [key: string]: any } | undefined>
   response: ResponseContext;
   url: URL;
 
-  /** Used along with useEndpoint for end-to-end type safety */
+  /** 
+   * Used along with useEndpoint for end-to-end type safety.
+   * 
+   * Even if not used with useEndpoint, you can stil treat this as a simple helper:
+   * 
+   * For onGet or onRequest handlers, this came from the queryParams.
+   * 
+   * For all other handlers, this came from the body of the request.
+  */
   inputs: INPUTS;
 
   /** URL Route params which have been parsed from the current url pathname. */
