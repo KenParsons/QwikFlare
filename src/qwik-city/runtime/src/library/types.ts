@@ -349,9 +349,12 @@ export interface QwikCityEnvData {
 //We want to throw away the INPUTS part of the Request Handler but pass along the BODY. 
 //This works perfectly but not sure what to do with this leftover X to stop it from erroring
 export type GetEndpointData<T> = T extends RequestHandler<infer U, infer X> ? U : T;
-
-
+//Exact same idea just vice-versa for the INPUTS vs BODY
 export type EndpointMethodInputs<T> = T extends RequestHandler<infer U, infer X> ? X : undefined;
+
+//type Arg1<T extends Function> = T extends (a1: infer A1) => any ? A1 : never;
+
+
 
 export interface SimpleURL {
   origin: string;

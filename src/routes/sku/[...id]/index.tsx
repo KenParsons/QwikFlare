@@ -14,7 +14,7 @@ export interface ProductDetails {
 
 export const onGet: RequestHandler<ProductDetails, { id: string }> = async (requestEvent) => {
     console.log(requestEvent);
-    requestEvent.inputs.id
+
 
     return {
         title: "Serenity",
@@ -32,7 +32,7 @@ export default component$(() => {
     const endpoint = useEndpoint("/sku/[...id]", {
         method: "get",
         inputs: {
-            
+            id: "aswdfasdf"
         }
     });
 

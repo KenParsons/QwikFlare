@@ -14,7 +14,7 @@ import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 export const useEndpoint = <
     Endpoint extends Endpoints,
     Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint],
-    Inputs = EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>
+    Inputs extends EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>
 >
     (
         route?: Endpoint,
