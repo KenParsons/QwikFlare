@@ -280,7 +280,7 @@ export interface RequestEvent<INPUTS extends { [key: string]: any } | undefined>
    * 
    * Even if not used with useEndpoint, you can stil treat this as a simple helper:
    * 
-   * For onGet or onRequest handlers, this came from the queryParams.
+   * For onGet or onRequest handlers, this came from the URL search params.
    * 
    * For all other handlers, this came from the body of the request.
   */
