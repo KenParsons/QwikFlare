@@ -46,17 +46,13 @@ export default component$(() => {
 
         <div>
             <Resource value={endpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
-            <button onClick$={() => endpoint.refetch({ inputs: { name: "hey", notes: "asdfasdf",} })}>
+            <button onClick$={() => endpoint.refetch({ inputs: { name: "hey", notes: "asdfasdf", } })}>
                 Refetch no config
             </button>
 
             <button onClick$={() => endpoint.refetch({
                 method: "get",
-                inputs: {
-                    name: "The Ancient One",
-                    notes: "We out here",
-                    
-                }
+                inputs: {}
             })}>
                 Refetch still get though, but new config
             </button>

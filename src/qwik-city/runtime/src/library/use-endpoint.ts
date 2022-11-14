@@ -35,11 +35,14 @@ export const useEndpoint = <
 
     const refetchSignal = useSignal(false);
 
+
     type RefetchConfig = {
         method?: Method,
-        body?: string
-    } & InputsIfExists<Inputs>
-        & Omit<RequestInit, "method" | "body">
+        body?: string,
+    } & Omit<RequestInit, "method" | "body">
+        & InputsIfExists<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
+
+
 
     const refetchConfig = useSignal<null | RefetchConfig>(null);
     const refetch = $((thisConfig: RefetchConfig) => {
