@@ -3,6 +3,8 @@ import { component$, Resource, useClientEffect$ } from "@builder.io/qwik"
 import { useLocation } from '@builder.io/qwik-city';
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
 
+
+
 export interface ProductDetails {
     title: string;
     description: string;
@@ -11,35 +13,49 @@ export interface ProductDetails {
     random: number;
 }
 
+export interface PersonSearchInputs { name?: string, age?: number }
 
-export const onGet: RequestHandler<ProductDetails, { name: string }> = async (requestEvent) => {
+export const onGet: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
     console.log(requestEvent);
-    
-    requestEvent.inputs
+    const test = requestEvent.url
+
     return {
-        title: "Serenity",
+        title: "Serenity" + " " + test,
         description: "A moment of solace in today's crazy world",
         price: "Priceless",
         timeStamp: (new Date()).toLocaleTimeString(),
-        random: Math.random(),
+        random: Math.random()
     }
 }
+
+
+export const onPost: RequestHandler<ProductDetails, PersonSearchInputs> = async (requestEvent) => {
+    // const { name, age } = requestEvent.inputs
+
+    return {
+        title: "Sasdfasdfasdf",
+        description: "2fhawfj",
+        price: "$12389128",
+        timeStamp: (new Date()).toLocaleTimeString(),
+        random: Math.random()
+    }
+}
+
+
 
 export default component$(() => {
     const location = useLocation();
 
     const userFirstName = "Marcos"
-    
+    const userAge = 23423
 
-    const endpoint = useEndpoint("/sku/[...id]", {
+
+
+    const endpoint = useEndpoint("/sku/[id]", {
         method: "get",
-        inputs: {
-            name: userFirstName
-        }
+        inputs: { name: "josh", age: 238428 }
     });
 
-
-    console.log(endpoint.resource.promise);
 
     useClientEffect$(async () => {
         const data = await endpoint.resource.promise;
@@ -59,27 +75,7 @@ export default component$(() => {
                 Refetch no config (will use initial config)
             </button>
 
-
-            <div></div>
-            <button onClick$={() => endpoint.refetch({ method: "get" })}>
-                Refetch Post Request
-            </button>
-            <div></div>
-
-
         </div>
-
-
-        <hr />
-        {/* 
-        <div>
-            <Resource value={anotherEndpoint.resource} onResolved={(data) => <ProductDisplay data={data} />} />
-            <button onClick$={() => anotherEndpoint.refetch()}>
-                Refetch
-            </button>
-            <div></div>
-        </div> */}
-
     </div>
 });
 

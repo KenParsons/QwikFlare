@@ -18,6 +18,7 @@ export async function requestHandler<T = any>(
   opts?: QwikCityRequestOptions
 ): Promise<T | null> {
   try {
+    console.log('in load user response ~~~')
     updateRequestCtx(requestCtx, trailingSlash);
 
     const loadedRoute = await loadRoute(routes, menus, cacheModules, requestCtx.url.pathname);

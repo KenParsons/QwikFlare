@@ -21,7 +21,6 @@ export default function (opts: RenderToStreamOptions) {
     //Note that this only needs to be run in dev mode since it's just type information. 
     //Can skip it as production server to save runtime load
     generateEndpointTypes();
-
     return renderToStream(<Root />, {
         manifest,
         ...opts,

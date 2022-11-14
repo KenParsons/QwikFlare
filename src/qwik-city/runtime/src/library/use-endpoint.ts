@@ -7,10 +7,11 @@ import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 
+type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {};
+
 /**
  * @alpha
  */
-
 export const useEndpoint = <
     Endpoint extends Endpoints,
     Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint],
@@ -20,10 +21,10 @@ export const useEndpoint = <
         route?: Endpoint,
         config?: {
             method?: Method,
-            inputs?: Inputs,
-            body?: string
-        } &
-            Omit<RequestInit, "method" | "body">,
+            body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream
+        }
+            & InputsIfExists<Inputs>
+            & Omit<RequestInit, "method" | "body">,
 
     ) => {
 
@@ -60,8 +61,7 @@ export const useEndpoint = <
                 throw new Error('Endpoint response body is missing');
             }
 
-            //TODO: Handle/convert the config options beyond just method type
-            if (loc.href !== targetHref) {
+            if (!isSameRoute(route!, loc.pathname)) {
                 const onMethodsByPath = await getOnMethodsByPath();
                 const thisPathMethods = onMethodsByPath[route!];
 
@@ -96,6 +96,48 @@ Falling back to the response data of the current page.`);
     return { resource, refetch }
 };
 
+export const isSameRoute = (targetPath: string, currentPath: string) => {
+    /*
+        NOTE: There may be a more Qwikified way of doing this, but this is the dumb brute solution:
+        We need to know if they're requesting a route via useEndpoint that is the route they're already on.
+        However, simple equality of targetPath === location.pathname won't hold up because of dynamic routes.
+
+    */
+    const targetChunks = targetPath.split("/").filter(chunk => chunk);
+    const currentChunks = currentPath.split("/").filter(chunk => chunk);
+    //the filter is beacuse there are often empty strings left over on either side. those shouldn't affect comparison
+
+    const maxChunks = Math.max(targetChunks.length, currentChunks.length);
+    for (let i = 0; i < maxChunks; i++) {
+        const thisTargetChunk = targetChunks[i];
+        if (!thisTargetChunk) {
+            /*if we're still iterating but no more target chunks exist, then we're at a deeper route
+            than our target route - not a direct match. We can't simply compare length and return
+            false if different because of the nature of catch-all routes */
+            return false;
+        }
+
+        const isCatchAll = thisTargetChunk.startsWith("[...");
+        if (isCatchAll) {
+            return true;
+            //everything else in current route will be "caught". counts as a match.
+        }
+
+        const isRouteParam = !isCatchAll && thisTargetChunk.startsWith("[");
+        if (isRouteParam) {
+            continue;
+            //this particular chunk can be anything, but subsequent chunks in the path still need to match up
+        }
+
+        const thisCurrentChunk = currentChunks[i];
+        if (thisTargetChunk !== thisCurrentChunk) {
+            return false
+        }
+    }
+    return true;
+}
+
+
 export const invalidateCacheByHref = (href: string) => {
     const pagePathname = new URL(href).pathname;
     const endpointUrl = getClientEndpointPath(pagePathname);
@@ -124,9 +166,7 @@ export const loadClientData = async (href: string, config?: any) => {
             u: endpointUrl,
             t: now,
             c: new Promise<ClientPageData | null>((resolve) => {
-                console.log({ config })
-                //TODO: config may not be 1 to 1 to fetch's settings, so a conversion has to happen
-                console.log(config);
+                //TODO: config will not be 1 to 1 to fetch's settings, so a conversion has to happen
                 fetch(endpointUrl, { ...config }).then(
                     (clientResponse) => {
                         const contentType = clientResponse.headers.get('content-type') || '';

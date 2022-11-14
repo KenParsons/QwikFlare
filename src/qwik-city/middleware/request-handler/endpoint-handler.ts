@@ -4,6 +4,7 @@ export function endpointHandler<T = any>(
   requestCtx: QwikCityRequestContext,
   userResponse: UserResponseContext
 ): Promise<T> {
+    console.log('in endpoint handler');
   const { pendingBody, resolvedBody, status, headers } = userResponse;
   const { response } = requestCtx;
 
