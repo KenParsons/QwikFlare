@@ -193,6 +193,7 @@ export const loadClientData = async (href: string, config?: any) => {
                     queryParams = queryParams.slice(0, -1) //trailing &
                 } else {
                     queryParams = urlFromHref.search
+                    config.body = JSON.stringify(config.inputs);
                 }
 
                 fetch(endpointUrl + queryParams, { ...config }).then(
