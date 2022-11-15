@@ -21,7 +21,8 @@ export const useEndpoint = <
         route?: Endpoint,
         config?: {
             method?: Method,
-            body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream
+            body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream,
+            skipInitialFetch?: boolean
         }
             & InputsIfExists<Inputs>
             & Omit<RequestInit, "method" | "body">,
@@ -32,9 +33,6 @@ export const useEndpoint = <
     const origin = new URL(loc.href).origin
     const targetHref = route ? (origin + route) : loc.href;
 
-    const refetchSignal = useSignal(false);
-
-
     type RefetchConfig = {
         method?: Method,
         body?: string,
@@ -42,12 +40,13 @@ export const useEndpoint = <
         & InputsIfExists<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
 
 
-
+    const refetchSignal = useSignal(0);
     const refetchConfig = useSignal<null | RefetchConfig>(null);
+
     const refetch = $((thisConfig?: RefetchConfig) => {
         if (thisConfig) { refetchConfig.value = thisConfig }
         invalidateCacheByHref(targetHref);
-        refetchSignal.value = !refetchSignal.value;
+        refetchSignal.value++;
     });
 
 
@@ -60,14 +59,17 @@ export const useEndpoint = <
         // fetch() for new data when user triggers a manual refetch() function
         track(() => refetchSignal.value);
 
-        const sameRoute = isSameRoute(route!, loc.pathname)
+        if (refetchSignal.value === 0 && config?.skipInitialFetch) {
+            return null
+        }
 
+        const sameRoute = isSameRoute(route!, loc.pathname)
         if (isServer) {
             if (!env) {
                 throw new Error('Endpoint response body is missing');
             }
 
-            // if (!sameRoute) {
+
             const onMethodsByPath = await getOnMethodsByPath();
             const thisPathMethods = onMethodsByPath[route!];
 
@@ -104,7 +106,11 @@ export const useEndpoint = <
         }
     });
 
-    return { resource, refetch }
+    return {
+        resource,
+        refetch,
+        hasBeenFetched: refetchSignal.value > 0 || !config?.skipInitialFetch
+    }
 };
 
 export const warnInvalidPathAndMethod = (targetHref: string, handlerKey: string, config: any) => {

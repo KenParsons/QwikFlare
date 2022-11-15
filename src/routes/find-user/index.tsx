@@ -1,6 +1,7 @@
 
-import { component$, Resource, useSignal } from "@builder.io/qwik"
+import { component$, Resource, useSignal, useStore, useWatch$ } from "@builder.io/qwik"
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
+import { useClientEffect$ } from "~/qwik-city/runtime/src/core";
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -56,8 +57,12 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
 }
 
 export default component$(() => {
-    const endpoint = useEndpoint("/find-user", { method: "get", inputs: { username: "josh.man83" } });
+    const endpoint = useEndpoint("/find-user", { method: "get", skipInitialFetch: true, inputs: {} });
     const userSearchInput = useSignal("");
+
+
+    const oneOffFetcher = useEndpoint("/find-user", { skipInitialFetch: true, inputs: {} });
+
     return <div>
         <div>
             <span>Find a user:</span>
@@ -74,21 +79,33 @@ export default component$(() => {
             }}>
                 Find user
             </button>
-            <button onClick$={() => {
-                endpoint.refetch()
+
+            {endpoint.hasBeenFetched ? <Resource value={endpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} /> : <>Please search for a user</>}
+
+            <button onClick$={(event) => {
+                oneOffFetcher.refetch({ inputs: {} });
             }}>
-                Initial config
+                One-off fetch
             </button>
-            <Resource value={endpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} />
+
         </div>
     </div >
 });
 
 export const PublicProfileDisplay = component$(({ data }: { data: PublicProfile }) => {
+
+
+
     return <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
         <div>
             <h1>Name: {data.firstName}</h1>
-            <h3>Likes:</h3><div>{data.likes.map(like => <p>{like}</p>)}</div>
+            {data.likes.length > 0 && <>
+                <h3>Likes:</h3>
+                <div>
+                    {data.likes.map(like => <p>{like}</p>)}
+                </div>
+            </>
+            }
             <h3>Dislikes:</h3><div> {data.dislikes.map(dislike => <p>{dislike}</p>)}</div>
             <hr />
             <p>Last retrieved at {data.lastRetrieved}</p>
