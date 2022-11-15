@@ -4,7 +4,7 @@
 
 "@builder.io/qwik-city@file:src/qwik/packages/qwik-city/lib":
   "resolved" "file:src/qwik/packages/qwik-city/lib"
-  "version" "0.0.118"
+  "version" "0.0.120"
   dependencies:
     "@mdx-js/mdx" "2.1.5"
     "@types/mdx" "2.0.3"
@@ -13,7 +13,7 @@
 
 "@builder.io/qwik@file:src/qwik/packages/qwik/dist":
   "resolved" "file:src/qwik/packages/qwik/dist"
-  "version" "0.12.1-dev20221114171830"
+  "version" "0.13.0-dev20221111223533"
 
 "@cloudflare/workers-types@^2.2.2":
   "integrity" "sha512-kaMn2rueJ0PL1TYVGknTCh0X0x0d9G+FNXAFep7/4uqecEZoQb/63o6rOmMuiqI09zLuHV6xhKRXinokV/MY9A=="

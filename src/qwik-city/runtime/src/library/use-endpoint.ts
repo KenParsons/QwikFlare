@@ -1,12 +1,11 @@
 import { $, useResource$, useSignal } from '@builder.io/qwik';
 import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
-import type { ClientPageData, GetEndpointData, EndpointMethodInputs, RouteLocation } from './types';
+import type { ClientPageData, GetEndpointData, EndpointMethodInputs, RequestHandler } from './types';
 import { getClientEndpointPath } from './utils';
 import { dispatchPrefetchEvent } from './client-navigate';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
-import { url } from 'inspector';
 
 
 type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {};
@@ -45,7 +44,7 @@ export const useEndpoint = <
 
 
     const refetchConfig = useSignal<null | RefetchConfig>(null);
-    const refetch = $((thisConfig: RefetchConfig) => {
+    const refetch = $((thisConfig?: RefetchConfig) => {
         if (thisConfig) { refetchConfig.value = thisConfig }
         invalidateCacheByHref(targetHref);
         refetchSignal.value = !refetchSignal.value;
@@ -68,27 +67,35 @@ export const useEndpoint = <
                 throw new Error('Endpoint response body is missing');
             }
 
-            if (!sameRoute) {
-                const onMethodsByPath = await getOnMethodsByPath();
-                const thisPathMethods = onMethodsByPath[route!];
+            // if (!sameRoute) {
+            const onMethodsByPath = await getOnMethodsByPath();
+            const thisPathMethods = onMethodsByPath[route!];
 
-                const thisMethodString = configToUse?.method ? configToUse.method.toString() : "";
-                const thisHandlerKey = thisMethodString ? ("on" + thisMethodString[0].toUpperCase() + thisMethodString.slice(1)) : null;
+            const thisMethodString = configToUse?.method ? configToUse.method.toString() : "";
+            const thisHandlerKey = thisMethodString ? ("on" + thisMethodString[0].toUpperCase() + thisMethodString.slice(1)) : null;
 
-                const handlerKey = (thisHandlerKey || "onGet") as keyof typeof thisPathMethods;
-                const handler = thisPathMethods[handlerKey] || thisPathMethods?.onRequest;
-                if (handler) {
-                    return handler({ request: { headers: { "Direct from SSR": true } } });
-                    //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
-                    //If not, add it. Then use it here. We'd want to pass along the original request context like headers
-                    //the above argument passed into handler() is just a filler
-                    //adding query params in to url is good idea as well? have to preserve them somehow.
-                } else {
-                    warnInvalidPathAndMethod(targetHref, handlerKey, config)
-                }
+            const handlerKey = (thisHandlerKey || "onGet") as keyof typeof thisPathMethods;
+            const handler = (thisPathMethods[handlerKey] || thisPathMethods?.onRequest) as RequestHandler
+            if (handler) {
+                return handler(
+                    {
+                        request: {
+                            headers: {
+                                //@ts-ignore
+                                "Direct from SSR": true
+                            }
+                        },
+                        inputs: (configToUse as any)?.inputs
+                    }
+                );
+                //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
+                //If not, add it. Then use it here. We'd want to pass along the original request context like headers
+                //the above argument passed into handler() is just a filler
+                //adding query params in to url is good idea as well? have to preserve them somehow.
+            } else {
+                warnInvalidPathAndMethod(targetHref, handlerKey, config)
+                return env.response.body;
             }
-            return env.response.body;
-
         } else {
             const hrefToUse = sameRoute ? loc.href : targetHref; //preserve route & query params if fetching data from same page currently located on
             const clientData = await loadClientData(hrefToUse, configToUse);
