@@ -1,7 +1,6 @@
 
-import { component$, Resource, useSignal, useStore, useWatch$ } from "@builder.io/qwik"
+import { $, component$, Resource, useSignal, useWatch$ } from "@builder.io/qwik"
 import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
-import { useClientEffect$ } from "~/qwik-city/runtime/src/core";
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -57,11 +56,13 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
 }
 
 export default component$(() => {
-    const endpoint = useEndpoint("/find-user", { method: "get", skipInitialFetch: true, inputs: {} });
+    const displayContentEndpoint = useEndpoint("/find-user", {
+        method: "get",
+        skipInitialCall: true,
+        inputs: {},
+    });
     const userSearchInput = useSignal("");
-
-
-    const oneOffFetcher = useEndpoint("/find-user", { skipInitialFetch: true, inputs: {} });
+    const updateAccountEndpoint = useEndpoint("/flower", { method: "get", skipInitialCall: true });
 
     return <div>
         <div>
@@ -75,26 +76,34 @@ export default component$(() => {
                 }}>
             </input>
             <button onClick$={() => {
-                endpoint.refetch({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
+                displayContentEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
             }}>
                 Find user
             </button>
 
-            {endpoint.hasBeenFetched ? <Resource value={endpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} /> : <>Please search for a user</>}
+            {displayContentEndpoint.hasBeenCalled ?
+                <>
+                    <Resource
+                        value={displayContentEndpoint.resource}
+                        onResolved={(data) => {
+                            return <>
+                                <PublicProfileDisplay data={data} />
+                                {data.firstName === "No user found" ?
+                                    <></> : <button onClick$={() => updateAccountEndpoint.call()}>
+                                        Update name
+                                    </button>}
+                            </>
+                        }}
+                    />
 
-            <button onClick$={(event) => {
-                oneOffFetcher.refetch({ inputs: {} });
-            }}>
-                One-off fetch
-            </button>
-
+                </>
+                : <p>Please search for a user</p>
+            }
         </div>
     </div >
 });
 
 export const PublicProfileDisplay = component$(({ data }: { data: PublicProfile }) => {
-
-
 
     return <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
         <div>

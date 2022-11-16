@@ -1,4 +1,4 @@
-import { $, useResource$, useSignal } from '@builder.io/qwik';
+import { $, QRL, ResourceReturn, useResource$, useSignal, useWatch$ } from '@builder.io/qwik';
 import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
 import type { ClientPageData, GetEndpointData, EndpointMethodInputs, RequestHandler } from './types';
@@ -22,7 +22,7 @@ export const useEndpoint = <
         config?: {
             method?: Method,
             body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream,
-            skipInitialFetch?: boolean
+            skipInitialCall?: boolean
         }
             & InputsIfExists<Inputs>
             & Omit<RequestInit, "method" | "body">,
@@ -40,26 +40,19 @@ export const useEndpoint = <
         & InputsIfExists<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
 
 
-    const refetchSignal = useSignal(0);
-    const refetchConfig = useSignal<null | RefetchConfig>(null);
-
-    const refetch = $((thisConfig?: RefetchConfig) => {
-        if (thisConfig) { refetchConfig.value = thisConfig }
-        invalidateCacheByHref(targetHref);
-        refetchSignal.value++;
-    });
-
+    const callTrigger = useSignal(0);
+    const callConfig = useSignal<null | RefetchConfig>(null);
 
     const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
-        const configToUse = refetchConfig.value || config;
+        const configToUse = callConfig.value || config;
         //this should only be necessary client side, right? could probably move it down to that else block 
 
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
-        track(() => refetchSignal.value);
+        track(() => callTrigger.value);
 
-        if (refetchSignal.value === 0 && config?.skipInitialFetch) {
+        if (callTrigger.value === 0 && config?.skipInitialCall) {
             return null
         }
 
@@ -101,17 +94,32 @@ export const useEndpoint = <
         } else {
             const hrefToUse = sameRoute ? loc.href : targetHref; //preserve route & query params if fetching data from same page currently located on
             const clientData = await loadClientData(hrefToUse, configToUse);
-            refetchConfig.value = null;
+            callConfig.value = null;
             return clientData && clientData.body || clientData;
         }
     });
 
-    return {
+    const call = $((thisConfig?: RefetchConfig) => {
+        if (thisConfig) { callConfig.value = thisConfig }
+        invalidateCacheByHref(targetHref);
+        callTrigger.value++;
+    });
+
+    const endpoint: {
+        resource: ResourceReturn<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>,
+        call: QRL<(thisConfig?: RefetchConfig | undefined) => void>,
+        hasBeenCalled: boolean,
+        whenCalled: any
+    } = {
         resource,
-        refetch,
-        hasBeenFetched: refetchSignal.value > 0 || !config?.skipInitialFetch
+        call,
+        hasBeenCalled: callTrigger.value > 0 || !config?.skipInitialCall,
+        whenCalled: $(() => { })
     }
+
+    return endpoint
 };
+
 
 export const warnInvalidPathAndMethod = (targetHref: string, handlerKey: string, config: any) => {
     console.warn(`
