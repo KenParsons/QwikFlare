@@ -61,8 +61,8 @@ export default component$(() => {
         skipInitialCall: true,
         inputs: {},
     });
+    const updateAccountEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
     const userSearchInput = useSignal("");
-    const updateAccountEndpoint = useEndpoint("/flower", { method: "get", skipInitialCall: true });
 
     return <div>
         <div>

@@ -8,23 +8,25 @@ import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 
 
-type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {};
+type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {  };
+type InputsIfNoSkipInitalCall<T, I> = T extends true ? {} : InputsIfExists<I> ;
 /**
  * @alpha
  */
 export const useEndpoint = <
     Endpoint extends Endpoints,
     Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint],
-    Inputs extends EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>
+    Inputs extends EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>,
+    SkipInitialCall extends boolean
 >
     (
         route?: Endpoint,
         config?: {
             method?: Method,
             body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream,
-            skipInitialCall?: boolean
+            skipInitialCall?: SkipInitialCall
         }
-            & InputsIfExists<Inputs>
+            & InputsIfNoSkipInitalCall<SkipInitialCall,Inputs>
             & Omit<RequestInit, "method" | "body">,
     ) => {
 
