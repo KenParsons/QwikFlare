@@ -59,7 +59,7 @@ export default component$(() => {
     const displayContentEndpoint = useEndpoint("/find-user", {
         method: "get",
         skipInitialCall: true,
-        inputs: {},
+        
     });
     const updateAccountEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
     const userSearchInput = useSignal("");
