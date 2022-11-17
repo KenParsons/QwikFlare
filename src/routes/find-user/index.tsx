@@ -1,6 +1,6 @@
 
 import { $, component$, Resource, useSignal, useWatch$ } from "@builder.io/qwik"
-import { RequestHandler, useEndpoint } from '~/qwik-city/runtime/src';
+import { RequestHandler, useEndpoint, useLocation } from '~/qwik-city/runtime/src';
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -57,8 +57,8 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
     }
 }
 
-export const onPost: RequestHandler<PublicProfile, UserSearchInputs> = async (requestEvent) => {
-    const { username, id } = requestEvent.inputs;
+export const onPost: RequestHandler<PublicProfile, { newName: string }> = async (requestEvent) => {
+    const { newName } = requestEvent.inputs;
     requestEvent.inputs;
 
     const userProfile = await getUserProfile("hi", "bye");
@@ -71,18 +71,25 @@ export const onPost: RequestHandler<PublicProfile, UserSearchInputs> = async (re
     }
 }
 
+export const afterCall = (endpoint: any, ) => { 
+
+}
+
 export default component$(() => {
-    const displayContentEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
+    const location = useLocation();
+    console.log('location query',location.query)
+    const displayContentEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
 
     //Need to figure out TS issue again 
-    const updateAccountEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
+    const updateAccountEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
 
     const userSearchInput = useSignal("");
-    // useWatch$(async ({ track }) => {
-    //     track(() => updateAccountEndpoint.resource)
-    //     await updateAccountEndpoint.resource.promise
-    //     displayContentEndpoint.call();
-    // })
+    useWatch$(async ({ track }) => {
+        track(() => updateAccountEndpoint.resource.promise);
+        console.log('update resource changed')
+        await updateAccountEndpoint.resource.promise
+        displayContentEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } });
+    })
 
     return <div>
         <div>
@@ -108,10 +115,10 @@ export default component$(() => {
                     onResolved={(data) => {
                         return <>
                             <PublicProfileDisplay data={data} />
-                            {data.firstName === "No user found" ?
-                                <></> : <button onClick$={() => updateAccountEndpoint.call()}>
-                                    Update name
-                                </button>}
+                            {data.firstName === "No user found" ? <></>
+                                :
+                                <UpdateNameButton endpoint={updateAccountEndpoint} name={"Hey"} />
+                            }
                         </>
                     }}
                 />
@@ -120,6 +127,12 @@ export default component$(() => {
         </div>
     </div >
 });
+
+export const UpdateNameButton = component$((props: { endpoint: ReturnType<typeof useEndpoint>, name: string }) => {
+    return <button onClick$={() => props.endpoint.call({ inputs: { newName: props.name } })}>
+        Update name
+    </button>
+})
 
 export const PublicProfileDisplay = component$(({ data }: { data: PublicProfile }) => {
 
