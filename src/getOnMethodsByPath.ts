@@ -1,5 +1,3 @@
-import { useStore } from "./qwik-city/runtime/src/core"
-
 type OnMethodsByPath = {
     [key: string]: {
         [Property in Methods]?: Function

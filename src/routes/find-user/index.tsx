@@ -45,6 +45,8 @@ export interface UserSearchInputs { username?: string, id?: string }
 
 export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (requestEvent) => {
     const { username, id } = requestEvent.inputs;
+    requestEvent.inputs;
+
     const userProfile = await getUserProfile(username, id);
     return {
         firstName: userProfile?.firstName || "No user found",
@@ -55,14 +57,32 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
     }
 }
 
-export default component$(() => {
-    const displayContentEndpoint = useEndpoint("/find-user", {
-        method: "get",
-        skipInitialCall: true,
+export const onPost: RequestHandler<PublicProfile, UserSearchInputs> = async (requestEvent) => {
+    const { username, id } = requestEvent.inputs;
+    requestEvent.inputs;
 
-    });
+    const userProfile = await getUserProfile("hi", "bye");
+    return {
+        firstName: userProfile?.firstName || "No user found",
+        likes: userProfile?.likes || [],
+        dislikes: userProfile?.dislikes || [],
+        lastRetrieved: (new Date()).toLocaleTimeString(),
+        requestId: Math.random() * 1000
+    }
+}
+
+export default component$(() => {
+    const displayContentEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
+
+    //Need to figure out TS issue again 
     const updateAccountEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
+
     const userSearchInput = useSignal("");
+    // useWatch$(async ({ track }) => {
+    //     track(() => updateAccountEndpoint.resource)
+    //     await updateAccountEndpoint.resource.promise
+    //     displayContentEndpoint.call();
+    // })
 
     return <div>
         <div>
@@ -75,6 +95,7 @@ export default component$(() => {
                     userSearchInput.value = target.value;
                 }}>
             </input>
+
             <button onClick$={() => {
                 displayContentEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
             }}>
@@ -82,21 +103,18 @@ export default component$(() => {
             </button>
 
             {displayContentEndpoint.hasBeenCalled ?
-                <>
-                    <Resource
-                        value={displayContentEndpoint.resource}
-                        onResolved={(data) => {
-                            return <>
-                                <PublicProfileDisplay data={data} />
-                                {data.firstName === "No user found" ?
-                                    <></> : <button onClick$={() => updateAccountEndpoint.call()}>
-                                        Update name
-                                    </button>}
-                            </>
-                        }}
-                    />
-
-                </>
+                <Resource
+                    value={displayContentEndpoint.resource}
+                    onResolved={(data) => {
+                        return <>
+                            <PublicProfileDisplay data={data} />
+                            {data.firstName === "No user found" ?
+                                <></> : <button onClick$={() => updateAccountEndpoint.call()}>
+                                    Update name
+                                </button>}
+                        </>
+                    }}
+                />
                 : <p>Please search for a user</p>
             }
         </div>

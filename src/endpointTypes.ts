@@ -4,6 +4,7 @@
 export type Endpoints = |"/find-user"|"/flower"|"/plainPage"|"/api/[...route]"
 
 import {onGet as endpoint0_onGet} from "./routes/find-user"
+import {onPost as endpoint0_onPost} from "./routes/find-user"
 import {onGet as endpoint1_onGet} from "./routes/flower"
 import {onGet as endpoint2_onGet} from "./routes/plainPage"
 import {onPost as endpoint3_onPost} from "./routes/api/[...route]"
@@ -12,6 +13,7 @@ import {onPost as endpoint3_onPost} from "./routes/api/[...route]"
 export type HandlerTypesByEndpointAndMethod = {
 "/find-user":{
 	"get": typeof endpoint0_onGet;
+	"post": typeof endpoint0_onPost;
 };
 "/flower":{
 	"get": typeof endpoint1_onGet;

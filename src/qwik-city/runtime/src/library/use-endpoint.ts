@@ -8,8 +8,9 @@ import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 
 
-type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {};
-type InputsIfExistsAndNoSkipInitalCall<U, T> = U extends true ? {} : InputsIfExists<T>;
+type InputsIfNoSkip<T, U> = U extends true ? {} : InputsIfExists<T>
+type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {}
+
 /**
  * @alpha
  */
@@ -26,7 +27,7 @@ export const useEndpoint = <
             body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream,
             skipInitialCall?: SkipInitialCall
         }
-            & InputsIfExistsAndNoSkipInitalCall<SkipInitialCall, Inputs>
+            & InputsIfNoSkip<Inputs, SkipInitialCall>
             & Omit<RequestInit, "method" | "body">,
     ) => {
 
@@ -35,7 +36,7 @@ export const useEndpoint = <
     const origin = new URL(loc.href).origin
     const targetHref = route ? (origin + route) : loc.href;
 
-    type RefetchConfig = {
+    type CallConfig = {
         method?: Method,
         body?: string,
     } & Omit<RequestInit, "method" | "body">
@@ -43,12 +44,10 @@ export const useEndpoint = <
 
 
     const callTrigger = useSignal(0);
-    const callConfig = useSignal<null | RefetchConfig>(null);
+    const callConfig = useSignal<null | CallConfig>(null);
 
     const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
         const configToUse = callConfig.value || config;
-        //this should only be necessary client side, right? could probably move it down to that else block 
-
         // fetch() for new data when the pathname has changed
         track(() => targetHref);
         // fetch() for new data when user triggers a manual refetch() function
@@ -82,7 +81,7 @@ export const useEndpoint = <
                                 "Direct from SSR": true
                             }
                         },
-                        inputs: (configToUse as any)?.inputs
+                        inputs: (configToUse as any)?.inputs || {}
                     }
                 );
                 //TODO: Check if env. has the request information somewhere, the same way we have the response to return below.
@@ -101,7 +100,7 @@ export const useEndpoint = <
         }
     });
 
-    const call = $((thisConfig?: RefetchConfig) => {
+    const call = $((thisConfig?: CallConfig) => {
         if (thisConfig) { callConfig.value = thisConfig }
         invalidateCacheByHref(targetHref);
         callTrigger.value++;
@@ -109,7 +108,7 @@ export const useEndpoint = <
 
     const endpoint: {
         resource: ResourceReturn<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>,
-        call: QRL<(thisConfig?: RefetchConfig | undefined) => void>,
+        call: QRL<(thisConfig?: CallConfig | undefined) => void>,
         hasBeenCalled: boolean,
         whenCalled: any
     } = {
@@ -147,8 +146,8 @@ export const isSameRoute = (targetPath: string, currentPath: string) => {
         const thisTargetChunk = targetChunks[i];
         if (!thisTargetChunk) {
             /*if we're still iterating but no more target chunks exist, then we're at a deeper route
-            than our target route - not a direct match. We can't simply compare length and return
-            false if different because of the nature of catch-all routes */
+            than our target route - not a direct match. We have to check it this way because can't 
+            simply compare length, then return false if different, because of the nature of catch-all routes */
             return false;
         }
 
@@ -202,7 +201,7 @@ export const loadClientData = async (href: string, config?: any) => {
             t: now,
             c: new Promise<ClientPageData | null>((resolve) => {
                 //TODO: config will not be 1 to 1 to fetch's settings, so a conversion has to happen;
-                //We'll pass the search in because that will only exist we're fetching the same location that we're on. 
+                //We'll pass the search in because that will only exists if we're fetching the same location that we're on. 
                 //And even still, any inputs from the config should override those since they were explicitly requested in useEndpoint. 
                 let queryParams = "?";
                 if (!config?.method || config.method === "get" || config.method === "request") {

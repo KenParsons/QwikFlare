@@ -28,6 +28,11 @@
             ]
         }
     },
+    "watchOptions": {
+        "watchFile": "useFsEvents",
+        "watchDirectory": "useFsEvents",
+        "fallbackPolling": "dynamicPriority"
+    },
     "include": [
         "src"
     ],
