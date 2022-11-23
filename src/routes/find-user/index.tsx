@@ -1,5 +1,5 @@
 
-import { component$, Resource, useClientEffect$, useSignal, useWatch$ } from "@builder.io/qwik";
+import { component$, Resource, useSignal } from "@builder.io/qwik";
 import { RequestHandler, useLocation } from '~/qwik-city/runtime/src';
 import { useEndpoint } from "~/qwik-city/runtime/src/library/use-endpoint";
 

@@ -1,3 +1,4 @@
+import { useWatch$ } from '@builder.io/qwik';
 import { $, QRL, ResourceReturn, useResource$, useSignal } from '@builder.io/qwik';
 import { isServer } from '@builder.io/qwik/build';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
@@ -118,6 +119,15 @@ export const useEndpoint = <
     return endpoint
 };
 
+
+export const afterCalling = (endpoint: any, callback: QRL) => {
+    useWatch$(async ({ track }) => {
+        track(() => endpoint.resource.promise);
+        const newData = await endpoint.resource.promise;
+        console.log({ newData })
+        callback(newData)
+    })
+}
 
 export const warnInvalidPathAndMethod = (targetHref: string, handlerKey: string, config: any) => {
     console.warn(`
