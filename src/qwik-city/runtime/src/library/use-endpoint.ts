@@ -17,8 +17,8 @@ export const cachedCallFunctions: {
 
 
 
-type InputsIfNoSkip<T, U> = U extends true ? {} : InputsIfExists<T>
-type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {}
+type CallInputs<T> = T extends { [key: string]: any } ? { inputs: T } : {}
+type InitialInputsIfNeeded<Inputs, SkipInitialCall> = [Inputs, SkipInitialCall] extends [infer TheInputs, false] ? { inputs: TheInputs } : {}
 
 /**
  * @alpha
@@ -36,7 +36,7 @@ export const useBackend = <
             body?: string //We Omit below and add it here because otherwise it's the non-serializable ReadableStream,
             skipInitialCall?: SkipInitialCall
         }
-            & InputsIfNoSkip<Inputs, SkipInitialCall>
+            & InitialInputsIfNeeded<Inputs, SkipInitialCall>
             & Omit<RequestInit, "method" | "body">,
     ) => {
 
@@ -50,7 +50,7 @@ export const useBackend = <
         body?: string,
         global?: boolean,
     } & Omit<RequestInit, "method" | "body">
-        & InputsIfExists<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
+        & CallInputs<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
 
 
     const callTrigger = useSignal(0);
