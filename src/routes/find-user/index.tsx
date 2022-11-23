@@ -1,6 +1,7 @@
 
 import { $, component$, Resource, useSignal, useWatch$ } from "@builder.io/qwik"
 import { RequestHandler, useEndpoint, useLocation } from '~/qwik-city/runtime/src';
+import { useBackend } from "~/qwik-city/runtime/src/library/use-endpoint";
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -71,14 +72,23 @@ export const onPost: RequestHandler<PublicProfile, { newName: string }> = async 
     }
 }
 
-export const afterCall = (endpoint: any, ) => { 
+export const afterCall = (endpoint: any,) => {
 
 }
 
+
+type Test<A> = A extends true ? true : false
+
+const blah: Test<true | undefined> = true
+
 export default component$(() => {
     const location = useLocation();
-    console.log('location query',location.query)
-    const displayContentEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
+    console.log('location query', location.query)
+
+    const accountInfoEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
+    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { newName: "hi", username: "hi", id: "hi" } });
+
+    const accountInfoEndpoint3 = useEndpoint("/find-user", { method: "get" });
 
     //Need to figure out TS issue again 
     const updateAccountEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
@@ -88,7 +98,7 @@ export default component$(() => {
         track(() => updateAccountEndpoint.resource.promise);
         console.log('update resource changed')
         await updateAccountEndpoint.resource.promise
-        displayContentEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } });
+        accountInfoEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } });
     })
 
     return <div>
@@ -104,24 +114,32 @@ export default component$(() => {
             </input>
 
             <button onClick$={() => {
-                displayContentEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
+                accountInfoEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
+                accountInfoEndpoint.globalCall();
             }}>
                 Find user
             </button>
 
-            {displayContentEndpoint.hasBeenCalled ?
-                <Resource
-                    value={displayContentEndpoint.resource}
-                    onResolved={(data) => {
+            {accountInfoEndpoint.hasBeenCalled ?
+                <>
+                    <Resource
+                        value={accountInfoEndpoint.resource}
+                        onResolved={(data) => {
+                            return <>
+                                <PublicProfileDisplay data={data} />
+                                {data.firstName === "No user found" ? <></>
+                                    :
+                                    <UpdateNameButton endpoint={updateAccountEndpoint} name={"Hey"} />
+                                }
+                            </>
+                        }}
+                    />
+                    <Resource value={accountInfoEndpoint2.resource} onResolved={(data) => {
                         return <>
-                            <PublicProfileDisplay data={data} />
-                            {data.firstName === "No user found" ? <></>
-                                :
-                                <UpdateNameButton endpoint={updateAccountEndpoint} name={"Hey"} />
-                            }
+                            Here's the data on a separate one {data.lastRetrieved} + {data.requestId}
                         </>
-                    }}
-                />
+                    }} />
+                </>
                 : <p>Please search for a user</p>
             }
         </div>

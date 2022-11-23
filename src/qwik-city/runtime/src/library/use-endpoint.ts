@@ -1,4 +1,4 @@
-import { $, QRL, ResourceReturn, useResource$, useSignal, useWatch$ } from '@builder.io/qwik';
+import { $, QRL, ResourceReturn, Signal, useClientEffect$, useResource$, useSignal, useWatch$ } from '@builder.io/qwik';
 import { useLocation, useQwikCityEnv, } from './use-functions';
 import { isServer } from '@builder.io/qwik/build';
 import type { ClientPageData, GetEndpointData, EndpointMethodInputs, RequestHandler } from './types';
@@ -8,17 +8,26 @@ import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
 
 
+
+export const cachedCallFunctions: {
+    [key: string]: {
+        [key: string]: Function
+    }
+} = {};
+
+
+
 type InputsIfNoSkip<T, U> = U extends true ? {} : InputsIfExists<T>
 type InputsIfExists<T> = T extends { [key: string]: any } ? { inputs: T } : {}
 
 /**
  * @alpha
  */
-export const useEndpoint = <
+export const useBackend = <
     Endpoint extends Endpoints,
     Method extends keyof HandlerTypesByEndpointAndMethod[Endpoint],
     Inputs extends EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>,
-    SkipInitialCall extends boolean
+    SkipInitialCall extends boolean = false
 >
     (
         route?: Endpoint,
@@ -39,6 +48,7 @@ export const useEndpoint = <
     type CallConfig = {
         method?: Method,
         body?: string,
+        global?: boolean,
     } & Omit<RequestInit, "method" | "body">
         & InputsIfExists<EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>
 
@@ -46,13 +56,30 @@ export const useEndpoint = <
     const callTrigger = useSignal(0);
     const callConfig = useSignal<null | CallConfig>(null);
 
-    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track }) => {
-        const configToUse = callConfig.value || config;
-        // fetch() for new data when the pathname has changed
-        track(() => targetHref);
-        // fetch() for new data when user triggers a manual refetch() function
-        track(() => callTrigger.value);
+    const call = $((thisConfig?: CallConfig) => {
+        if (thisConfig) { callConfig.value = thisConfig }
+        invalidateCacheByHref(targetHref);
+        callTrigger.value++;
+    });
 
+    const routeAndMethod = route + "." + (config?.method as string || "get");
+
+    const randomId = useSignal(Math.random()); //we need to use a signal here to persist the value over remounts,etc
+    cachedCallFunctions[routeAndMethod] = cachedCallFunctions[routeAndMethod] || {};
+    cachedCallFunctions[routeAndMethod][randomId.value] = call;
+    const globalCall = $((thisConfig?: CallConfig) => {
+        console.log(cachedCallFunctions);
+        const theseBackends = cachedCallFunctions[routeAndMethod];
+        for (const id in theseBackends) {
+            const thisCallFunction = theseBackends[id];
+            thisCallFunction();
+        }
+    })
+
+    const resource = useResource$<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>(async ({ track, cleanup }) => {
+        const configToUse = callConfig.value || config;
+        track(() => targetHref);
+        track(() => callTrigger.value);
         if (callTrigger.value === 0 && config?.skipInitialCall) {
             return null
         }
@@ -98,27 +125,26 @@ export const useEndpoint = <
             callConfig.value = null;
             return clientData && clientData.body || clientData;
         }
+
     });
 
-    const call = $((thisConfig?: CallConfig) => {
-        if (thisConfig) { callConfig.value = thisConfig }
-        invalidateCacheByHref(targetHref);
-        callTrigger.value++;
-    });
-
-    const endpoint: {
+    const backend: {
         resource: ResourceReturn<GetEndpointData<HandlerTypesByEndpointAndMethod[Endpoint][Method]>>,
         call: QRL<(thisConfig?: CallConfig | undefined) => void>,
         hasBeenCalled: boolean,
-        whenCalled: any
+        globalCall: QRL<(thisConfig?: CallConfig | undefined) => void>,
     } = {
         resource,
         call,
         hasBeenCalled: callTrigger.value > 0 || !config?.skipInitialCall,
-        whenCalled: $(() => { })
+        globalCall
     }
 
-    return endpoint
+    console.log(cachedCallFunctions);
+    useClientEffect$(() => {
+        console.log(cachedCallFunctions)
+    })
+    return backend
 };
 
 
