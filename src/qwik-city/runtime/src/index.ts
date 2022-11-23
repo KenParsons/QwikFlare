@@ -25,7 +25,7 @@ export { Link } from './library/link-component';
 export type { LinkProps } from './library/link-component';
 export { ServiceWorkerRegister } from './library/sw-component';
 export { useDocumentHead, useLocation, useContent, useNavigate } from './library/use-functions';
-export { useBackend as useEndpoint } from './library/use-endpoint';
+export { useEndpoint } from './library/use-endpoint';
 
 // @deprecated
 export type { EndpointHandler } from './library/types';

@@ -17,6 +17,7 @@ body {
   background-color: #fafafa;
   font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 20px 20px 40px 20px;
+  
 }
 
 main {
@@ -122,4 +123,24 @@ a.mindblow:hover {
   border-bottom-width: 0px;
   margin-bottom: 4px;
   transform: translateY(4px);
+}
+
+
+.test-background { 
+    position: relative;
+    min-height: 80px;
+    width: fit-content;
+}
+
+.test-background:after { 
+    content: '';
+    position: absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background-image: url('/favicon.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.2;
 }

@@ -1,7 +1,7 @@
 
-import { $, component$, Resource, useSignal, useWatch$ } from "@builder.io/qwik"
-import { RequestHandler, useEndpoint, useLocation } from '~/qwik-city/runtime/src';
-import { useBackend } from "~/qwik-city/runtime/src/library/use-endpoint";
+import { component$, Resource, useClientEffect$, useSignal, useWatch$ } from "@builder.io/qwik";
+import { RequestHandler, useLocation } from '~/qwik-city/runtime/src';
+import { useEndpoint } from "~/qwik-city/runtime/src/library/use-endpoint";
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -33,7 +33,6 @@ async function getUserProfile(username?: string, id?: string): Promise<UserProfi
     return user || null;
 }
 
-
 export interface PublicProfile {
     firstName: string;
     likes: string[];
@@ -42,7 +41,7 @@ export interface PublicProfile {
     requestId: number;
 }
 
-export interface UserSearchInputs { username?: string, id?: string }
+export interface UserSearchInputs { username: string, id?: string }
 
 export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (requestEvent) => {
     const { username, id } = requestEvent.inputs;
@@ -58,49 +57,20 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
     }
 }
 
-export const onPost: RequestHandler<PublicProfile, { newName: string }> = async (requestEvent) => {
-    const { newName } = requestEvent.inputs;
-    requestEvent.inputs;
-
-    const userProfile = await getUserProfile("hi", "bye");
-    return {
-        firstName: userProfile?.firstName || "No user found",
-        likes: userProfile?.likes || [],
-        dislikes: userProfile?.dislikes || [],
-        lastRetrieved: (new Date()).toLocaleTimeString(),
-        requestId: Math.random() * 1000
-    }
-}
-
-export const afterCall = (endpoint: any,) => {
-
-}
-
-
-type Test<A> = A extends true ? true : false
-
-const blah: Test<true | undefined> = true
-
 export default component$(() => {
     const location = useLocation();
     console.log('location query', location.query)
 
-    const accountInfoEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
-    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { username: "hi", id: "hi" } });
-
-    accountInfoEndpoint.call()
-    // const accountInfoEndpoint3 = useEndpoint("/find-user", { method: "get" });
-
-    //Need to figure out TS issue again 
-    const updateAccountEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
+    const accountInfoEndpoint = useEndpoint("/find-user", { method: "get", inputs: { username: "josh.man83" } });
+    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { username: "" } });
 
     const userSearchInput = useSignal("");
-    useWatch$(async ({ track }) => {
-        track(() => updateAccountEndpoint.resource.promise);
-        console.log('update resource changed')
-        await updateAccountEndpoint.resource.promise
-        accountInfoEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } });
-    })
+    // useWatch$(async ({ track }) => {
+    //     track(() => updateAccountEndpoint.resource.promise);
+    //     console.log('update resource changed')
+    //     await updateAccountEndpoint.resource.promise
+    //     accountInfoEndpoint.call();
+    // })
 
     return <div>
         <div>
@@ -115,31 +85,15 @@ export default component$(() => {
             </input>
 
             <button onClick$={() => {
-                accountInfoEndpoint.call({ inputs: { id: userSearchInput.value, username: userSearchInput.value } })
-                accountInfoEndpoint.globalCall();
+                accountInfoEndpoint.call({ inputs: { username: userSearchInput.value } })
             }}>
                 Find user
             </button>
 
             {accountInfoEndpoint.hasBeenCalled ?
                 <>
-                    <Resource
-                        value={accountInfoEndpoint.resource}
-                        onResolved={(data) => {
-                            return <>
-                                <PublicProfileDisplay data={data} />
-                                {data.firstName === "No user found" ? <></>
-                                    :
-                                    <UpdateNameButton endpoint={updateAccountEndpoint} name={"Hey"} />
-                                }
-                            </>
-                        }}
-                    />
-                    <Resource value={accountInfoEndpoint2.resource} onResolved={(data) => {
-                        return <>
-                            Here's the data on a separate one {data.lastRetrieved} + {data.requestId}
-                        </>
-                    }} />
+                    <Resource value={accountInfoEndpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} />
+                    <Resource value={accountInfoEndpoint2.resource} onResolved={(data) => <div>  {data.lastRetrieved} + {data.requestId}  </div>} />
                 </>
                 : <p>Please search for a user</p>
             }
@@ -147,25 +101,15 @@ export default component$(() => {
     </div >
 });
 
-export const UpdateNameButton = component$((props: { endpoint: ReturnType<typeof useEndpoint>, name: string }) => {
-    return <button onClick$={() => props.endpoint.call({ inputs: { newName: props.name } })}>
-        Update name
-    </button>
-})
+
 
 export const PublicProfileDisplay = component$(({ data }: { data: PublicProfile }) => {
 
     return <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
         <div>
             <h1>Name: {data.firstName}</h1>
-            {data.likes.length > 0 && <>
-                <h3>Likes:</h3>
-                <div>
-                    {data.likes.map(like => <p>{like}</p>)}
-                </div>
-            </>
-            }
-            <h3>Dislikes:</h3><div> {data.dislikes.map(dislike => <p>{dislike}</p>)}</div>
+            {data.likes.length > 0 && <>  <h3>Likes:</h3>   <div> {data.likes.map(like => <p>{like}</p>)}  </div>   </>}
+            {data.dislikes.length > 0 && <><h3>Dislikes:</h3><div> {data.dislikes.map(dislike => <p>{dislike}</p>)}</div></>}
             <hr />
             <p>Last retrieved at {data.lastRetrieved}</p>
             <p style={{ fontSize: "10px" }}>Request ID: {data.requestId}</p>
