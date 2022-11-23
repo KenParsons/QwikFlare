@@ -86,9 +86,10 @@ export default component$(() => {
     console.log('location query', location.query)
 
     const accountInfoEndpoint = useEndpoint("/find-user", { method: "get", skipInitialCall: true });
-    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { newName: "hi", username: "hi", id: "hi" } });
+    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { username: "hi", id: "hi" } });
 
-    const accountInfoEndpoint3 = useEndpoint("/find-user", { method: "get" });
+    accountInfoEndpoint.call()
+    // const accountInfoEndpoint3 = useEndpoint("/find-user", { method: "get" });
 
     //Need to figure out TS issue again 
     const updateAccountEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
