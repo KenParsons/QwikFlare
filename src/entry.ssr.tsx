@@ -12,7 +12,7 @@
  */
 import { renderToStream, RenderToStreamOptions } from '@builder.io/qwik/server';
 import { manifest } from '@qwik-client-manifest';
-import { getOnMethodsByPath, Methods } from './getOnMethodsByPath';
+import { getOnMethodsByPath, getRoutes, Methods } from './getOnMethodsByPath';
 import Root from './root';
 
 
@@ -21,6 +21,7 @@ export default function (opts: RenderToStreamOptions) {
     //Note that this only needs to be run in dev mode since it's just type information. 
     //Can skip it as production server to save runtime load
     generateEndpointTypes();
+    generateRoutes();
     return renderToStream(<Root />, {
         manifest,
         ...opts,
@@ -34,19 +35,59 @@ export default function (opts: RenderToStreamOptions) {
     });
 }
 
+async function generateRoutes() { 
+    const fs = await import('fs');
+    const path = await import('path');
+
+    getRoutes().then(routes => { 
+        const filePath = path.join(process.cwd(), "src", "route-types.ts");
+        const routeTypes = buildRouteTypesString(routes);
+        fs.writeFileSync(filePath, routeTypes)
+    })
+}
+
+function buildRouteTypesString(routes: string[]) { 
+    let string = `//This is an automatically generated file. There is no need to update it manually. Manual updates will be overridden.\nexport type Routes = {\n\t`;
+    for (const route of routes) { 
+        string += `"${route}":`
+        if (!route.includes("[")) { 
+            string += `null;\n\t`;
+            continue;
+        }
+
+        string += `{\n\t\t\t`
+        const thisRouteParams: string[] = []
+        const slugs = route.split("/");
+        for (const slug of slugs) { 
+            if (slug && slug.startsWith("[") && slug.endsWith("]")) { 
+                thisRouteParams.push(slug)
+            }
+        }
+        for (const param of thisRouteParams) { 
+            string += `"${param}":string;\n`
+        }
+        string += `\t};\n\t`
+    }
+
+    string += "\n}"
+    return string;
+}
+
+
+
 async function generateEndpointTypes() {
     const fs = await import('fs');
     const path = await import('path');
 
     getOnMethodsByPath().then(map => {
-        const filePath = path.join(process.cwd(), "src", "endpointTypes.ts");
-        const routeTypes = buildRouteTypesString(map);
+        const filePath = path.join(process.cwd(), "src", "endpoint-types.ts");
+        const routeTypes = buildEndpointTypesString(map);
         fs.writeFileSync(filePath, routeTypes)
     });
 }
 
 
-function buildRouteTypesString(map: Awaited<ReturnType<typeof getOnMethodsByPath>>) {
+function buildEndpointTypesString(map: Awaited<ReturnType<typeof getOnMethodsByPath>>) {
     let string = `//This is an automatically generated file. There is no need to update it manually.
 //If you added or removed a route and it's not showing here, restart your dev server 🔁
 //(and after you may need to refresh your browser page to trigger the server as well 🔃)

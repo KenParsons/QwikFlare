@@ -1,7 +1,7 @@
 import { useWatch$ } from '@builder.io/qwik';
 import { $, QRL, ResourceReturn, useResource$, useSignal } from '@builder.io/qwik';
 import { isServer } from '@builder.io/qwik/build';
-import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpointTypes';
+import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
 import { getOnMethodsByPath } from '~/getOnMethodsByPath';
 import { dispatchPrefetchEvent } from './client-navigate';
 import type { ClientPageData, EndpointMethodInputs, GetEndpointData, RequestHandler } from './types';
@@ -39,7 +39,7 @@ export const useEndpoint = <
     const targetHref = route ? (origin + route) : loc.href;
 
     type CallConfig = {
-        method?: Method,
+        method?: keyof HandlerTypesByEndpointAndMethod[Endpoint],
         body?: string,
         global?: boolean,
     } & Omit<RequestInit, "method" | "body">
@@ -120,11 +120,12 @@ export const useEndpoint = <
 };
 
 
+
 export const afterCalling = (endpoint: any, callback: QRL) => {
+
     useWatch$(async ({ track }) => {
         track(() => endpoint.resource.promise);
-        const newData = await endpoint.resource.promise;
-        console.log({ newData })
+        const newData = await endpoint.resource.promise as { hi: "Bye" };
         callback(newData)
     })
 }

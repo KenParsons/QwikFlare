@@ -1,5 +1,10 @@
 import { RequestHandler } from "~/qwik-city/runtime/src";
 
+export interface RouteParams {
+    id: number;
+    name: string;
+    tags: string[];
+}
 
 // export const onGet: RequestHandler<{ test: number }> = async () => {
 //     // const resource = useResource$(() => {

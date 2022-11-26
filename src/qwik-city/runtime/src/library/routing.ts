@@ -1,6 +1,9 @@
+import { Routes } from '~/route-types';
+import { HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
 import { MODULE_CACHE } from './constants';
 import type {
   ContentMenu,
+  EndpointMethodInputs,
   LoadedRoute,
   MenuData,
   MenuModule,
@@ -106,3 +109,54 @@ export const getRouteParams = (paramNames: string[] | undefined, match: RegExpEx
 
   return params;
 };
+
+
+//Note that this doesn't keep positional information
+//So this would fail in the weird case where someone did /path/path/[id]/path/[id] or something
+//like that where they used the exact same param name in multiple spots
+//We can account for that, but just getting the working version out so y'all can feel it out as an API
+export function getPath<Route extends keyof Routes>
+  (
+    ...args: Routes[Route] extends null ?
+      DoOnGetInputsExist<Route> extends true ? [route: Route, params: OnGetInputsIfTheyExist<Route>] :
+      [route: Route]
+      : [route: Route, params: Routes[Route] & OnGetInputsIfTheyExist<Route>]
+  ) {
+  const [route, params] = args;
+  let path = route as string;
+  let queryParams = "";
+  if (params) {
+    for (const param in params) {
+
+      const passedString: string = (params as any)[param]
+      if (param.startsWith("[") && param.endsWith("]")) {
+        path = path.replace(param, passedString)
+      } else {
+        const value = (params as any)[param];
+        const stringified = (typeof (value) === "object") ? JSON.stringify(value) : value;
+        queryParams += `${param}=${stringified}&`
+      }
+    }
+  }
+
+  if (queryParams) {
+    path = path + "?" + queryParams.slice(0, -1) //trailing &
+  }
+  return path;
+}
+
+getPath("/users/[recordId]/[propertyId]/get", {
+  "[propertyId]": "hi",
+  "[recordId]": "hello",
+  testNumber: 3
+})
+ 
+// getPath("/random-number", {})
+
+type DoOnGetInputsExist<Route> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
+  EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> extends undefined ?
+  false : true : false : false
+
+type OnGetInputsIfTheyExist<Route extends keyof Routes> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
+  EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> extends undefined ?
+  {} : EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> : {} : {}

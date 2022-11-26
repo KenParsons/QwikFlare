@@ -1,7 +1,7 @@
 
-import { component$, Resource, useSignal } from "@builder.io/qwik";
-import { RequestHandler, useLocation } from '~/qwik-city/runtime/src';
-import { useEndpoint } from "~/qwik-city/runtime/src/library/use-endpoint";
+import { $, component$ } from "@builder.io/qwik";
+import { RequestHandler } from '~/qwik-city/runtime/src';
+import { afterCalling, useEndpoint } from "~/qwik-city/runtime/src/library/use-endpoint";
 
 type UserProfile = { firstName: string, likes: string[], dislikes: string[] }
 
@@ -41,13 +41,12 @@ export interface PublicProfile {
     requestId: number;
 }
 
-export interface UserSearchInputs { username: string, id?: string }
+export interface UserSearchInputs { username: string }
 
-export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (requestEvent) => {
-    const { username, id } = requestEvent.inputs;
-    requestEvent.inputs;
+export const onGet: RequestHandler<PublicProfile> = async () => {
 
-    const userProfile = await getUserProfile(username, id);
+
+    const userProfile = await getUserProfile("BigVik");
     return {
         firstName: userProfile?.firstName || "No user found",
         likes: userProfile?.likes || [],
@@ -57,24 +56,31 @@ export const onGet: RequestHandler<PublicProfile, UserSearchInputs> = async (req
     }
 }
 
+export const onPost: RequestHandler<{ success: boolean }, { id: string }> = async (requestEvent) => {
+    const { id } = requestEvent.inputs;
+
+
+    const userProfile = await getUserProfile(id);
+    console.log(userProfile);
+    return {
+        success: true
+    }
+}
+
+
 export default component$(() => {
-    const location = useLocation();
-    console.log('location query', location.query)
+    // const getEndpoint = useEndpoint("/find-user", { method: "get" });
+    const postEndpoint = useEndpoint("/find-user", { method: "post", skipInitialCall: true });
+    afterCalling(postEndpoint, $(()=> { 
+        
+    }))
 
-    const accountInfoEndpoint = useEndpoint("/find-user", { method: "get", inputs: { username: "josh.man83" } });
-    const accountInfoEndpoint2 = useEndpoint("/find-user", { method: "get", inputs: { username: "" } });
+    // const userSearchInput = useSignal("");
 
-    const userSearchInput = useSignal("");
-    // useWatch$(async ({ track }) => {
-    //     track(() => updateAccountEndpoint.resource.promise);
-    //     console.log('update resource changed')
-    //     await updateAccountEndpoint.resource.promise
-    //     accountInfoEndpoint.call();
-    // })
 
     return <div>
         <div>
-            <span>Find a user:</span>
+            {/* <span>Find a user:</span>
             <input
                 style={{ margin: "0px 5px" }}
                 value={userSearchInput.value}
@@ -82,21 +88,16 @@ export default component$(() => {
                     const target = event.target as HTMLInputElement;
                     userSearchInput.value = target.value;
                 }}>
-            </input>
+            </input> */}
 
             <button onClick$={() => {
-                accountInfoEndpoint.call({ inputs: { username: userSearchInput.value } })
+                postEndpoint.call({ inputs: { id: "jsdfjasdjf" } })
             }}>
-                Find user
+                Update record
             </button>
 
-            {accountInfoEndpoint.hasBeenCalled ?
-                <>
-                    <Resource value={accountInfoEndpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} />
-                    <Resource value={accountInfoEndpoint2.resource} onResolved={(data) => <div>  {data.lastRetrieved} + {data.requestId}  </div>} />
-                </>
-                : <p>Please search for a user</p>
-            }
+
+            {/* <Resource value={endpoint.resource} onResolved={(data) => <PublicProfileDisplay data={data} />} /> */}
         </div>
     </div >
 });
