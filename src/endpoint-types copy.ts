@@ -42,12 +42,15 @@ type TrueIfHasOnGet<T extends keyof HandlerTypesByRouteAndMethod> = "get" extend
 
 type TrueIfHasOnGetByRoute = {
 	[Route in keyof HandlerTypesByRouteAndMethod]: TrueIfHasOnGet<Route>;
-}	
+}
 
-type KeysMatching<Object, DesiredType> = {[Key in keyof Object]-?: Object[Key] extends DesiredType ? Key : never}[keyof Object];
+type KeysMatching<Object, DesiredType> = { [Key in keyof Object]-?: Object[Key] extends DesiredType ? Key : never }[keyof Object];
 //Incredible. Further details here: https://stackoverflow.com/questions/54520676/in-typescript-how-to-get-the-keys-of-an-object-type-whose-values-are-of-a-given
 
-
 type RoutesWithOnGet = KeysMatching<TrueIfHasOnGetByRoute, true>;
-const aRoute: RoutesWithOnGet = "/find-user"
-console.log(aRoute);
+
+type OnGetHandlersByRoute = {
+	[Route in RoutesWithOnGet]: HandlerTypesByRouteAndMethod[Route]["get"]
+}
+
+export type RoutesThatUseThisOnGetHandler<Handler> = KeysMatching<OnGetHandlersByRoute, Handler>;
