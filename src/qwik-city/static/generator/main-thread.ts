@@ -1,7 +1,7 @@
 import type { StaticGeneratorOptions, StaticGeneratorResults, StaticRoute, System } from './types';
 import { msToString } from '../../utils/format';
 import { getPathnameForDynamicRoute, normalizePathname } from '../../utils/pathname';
-import type { PageModule, RouteParams } from '../../runtime/src/library/types';
+import type { PageModule, PathParams } from '../../runtime/src/library/types';
 import { routes, trailingSlash, basePathname } from '@qwik-city-plan';
 
 export async function mainThread(sys: System) {
@@ -103,7 +103,7 @@ export async function mainThread(sys: System) {
         }
       };
 
-      const addToQueue = (pathname: string | undefined | null, params: RouteParams | undefined) => {
+      const addToQueue = (pathname: string | undefined | null, params: PathParams | undefined) => {
         pathname = normalizePathname(pathname, basePathname, trailingSlash);
         if (pathname && !queue.some((s) => s.pathname === pathname)) {
           queue.push({

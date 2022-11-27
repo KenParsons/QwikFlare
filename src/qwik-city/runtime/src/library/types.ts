@@ -2,6 +2,7 @@ import type { ErrorResponse } from '../../../middleware/request-handler/error-ha
 import type { RedirectResponse } from '../../../middleware/request-handler/redirect-handler';
 import type { NoSerialize } from '@builder.io/qwik';
 
+
 export interface RouteModule<BODY = unknown> {
   onDelete?: RequestHandler<BODY>;
   onGet?: RequestHandler<BODY>;
@@ -33,7 +34,7 @@ export interface MenuModule {
  * @alpha
  */
 export interface RouteLocation {
-  readonly params: RouteParams;
+  readonly params: PathParams;
   readonly href: string;
   readonly pathname: string;
   readonly query: Record<string, string>;
@@ -200,14 +201,14 @@ export interface QwikCityPlan {
 /**
  * @alpha
  */
-export type RouteParams = Record<string, string>;
+export type PathParams = Record<string, string>;
 
 export type ContentModule = PageModule | LayoutModule;
 
 export type ContentModuleHead = DocumentHead | ResolvedDocumentHead;
 
 export type LoadedRoute = [
-  params: RouteParams,
+  params: PathParams,
   mods: (RouteModule | ContentModule)[],
   menu: ContentMenu | undefined,
   routeBundleNames: string[] | undefined
@@ -270,25 +271,13 @@ export interface ResponseContext {
 /**
  * @alpha
  */
-export interface RequestEvent<INPUTS extends { [key: string]: any } | undefined> {
+export interface RequestEvent<QueryParams extends { [key: string]: any } | undefined> {
   request: RequestContext;
   response: ResponseContext;
   url: URL;
 
-  /** 
-   * Used along with useEndpoint for end-to-end type safety.
-   * 
-   * Even if not used with useEndpoint, you can stil treat this as a simple helper:
-   * 
-   * For onGet or onRequest handlers, this came from the URL search params.
-   * 
-   * For all other handlers, this came from the body of the request.
-  */
-  inputs: INPUTS;
-
   /** URL Route params which have been parsed from the current url pathname. */
-  params: RouteParams;
-
+  params: PathParams & QueryParams;
 
   /** Platform specific data and functions */
   platform: Record<string, any>;
@@ -310,6 +299,7 @@ export type RequestHandler<
   BODY = unknown,
   Inputs extends { [key: string]: any } | undefined = undefined
 > = (ev: RequestEvent<Inputs>) => RequestHandlerResult<BODY>;
+
 
 /**
  * @alpha
@@ -344,13 +334,13 @@ export interface ClientPageData extends Omit<EndpointResponse, 'status'> {
 export type StaticGenerateHandler = () => Promise<StaticGenerate> | StaticGenerate;
 
 export interface StaticGenerate {
-  params?: RouteParams[];
+  params?: PathParams[];
 }
 
 export interface QwikCityRenderDocument extends Document { }
 
 export interface QwikCityEnvData {
-  params: RouteParams;
+  params: PathParams;
   response: EndpointResponse;
 }
 

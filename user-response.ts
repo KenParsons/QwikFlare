@@ -149,8 +149,6 @@ export async function loadUserResponse(
                 // const method = request.method;
 
                 const urlObject = new URL(url);
-                console.log('Search params', urlObject.searchParams);
-                console.log('Request method:', request.method)
                 const method = request.method;
 
                 const inputs = (!method || method === "GET") ? buildInputsFromQueryParams(urlObject.searchParams) : await buildInputsFromRequestBody(request)

@@ -1,4 +1,4 @@
-import { Routes } from '~/route-types';
+import { PathParamsByRoute } from '~/route-types';
 import { HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
 import { MODULE_CACHE } from './constants';
 import type {
@@ -10,7 +10,7 @@ import type {
   ModuleLoader,
   RouteData,
   RouteModule,
-  RouteParams,
+  PathParams,
 } from './types';
 
 export const loadRoute = async (
@@ -99,7 +99,7 @@ const getMenuLoader = (menus: MenuData[] | undefined, pathname: string) => {
 };
 
 export const getRouteParams = (paramNames: string[] | undefined, match: RegExpExecArray | null) => {
-  const params: RouteParams = {};
+  const params: PathParams = {};
 
   if (paramNames) {
     for (let i = 0; i < paramNames.length; i++) {
@@ -115,13 +115,16 @@ export const getRouteParams = (paramNames: string[] | undefined, match: RegExpEx
 //So this would fail in the weird case where someone did /path/path/[id]/path/[id] or something
 //like that where they used the exact same param name in multiple spots
 //We can account for that, but just getting the working version out so y'all can feel it out as an API
-export function getPath<Route extends keyof Routes>
+export function route<Route extends keyof PathParamsByRoute>
   (
-    ...args: Routes[Route] extends null ?
+    ...args: PathParamsByRoute[Route] extends null ?
       DoOnGetInputsExist<Route> extends true ? [route: Route, params: OnGetInputsIfTheyExist<Route>] :
       [route: Route]
-      : [route: Route, params: Routes[Route] & OnGetInputsIfTheyExist<Route>]
+      : [route: Route, params: PathParamsByRoute[Route] & OnGetInputsIfTheyExist<Route>]
   ) {
+
+
+
   const [route, params] = args;
   let path = route as string;
   let queryParams = "";
@@ -137,6 +140,8 @@ export function getPath<Route extends keyof Routes>
         queryParams += `${param}=${stringified}&`
       }
     }
+
+
   }
 
   if (queryParams) {
@@ -145,18 +150,14 @@ export function getPath<Route extends keyof Routes>
   return path;
 }
 
-getPath("/users/[recordId]/[propertyId]/get", {
-  "[propertyId]": "hi",
-  "[recordId]": "hello",
-  testNumber: 3
-})
- 
-// getPath("/random-number", {})
+
+route("/flower")
+
 
 type DoOnGetInputsExist<Route> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
   EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> extends undefined ?
   false : true : false : false
 
-type OnGetInputsIfTheyExist<Route extends keyof Routes> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
+type OnGetInputsIfTheyExist<Route extends keyof PathParamsByRoute> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
   EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> extends undefined ?
   {} : EndpointMethodInputs<HandlerTypesByEndpointAndMethod[Route]["get"]> : {} : {}

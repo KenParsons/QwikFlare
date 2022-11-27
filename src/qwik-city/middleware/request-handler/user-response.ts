@@ -5,7 +5,7 @@ import type {
     RequestEvent,
     ResponseContext,
     RouteModule,
-    RouteParams,
+    PathParams,
 } from '../../runtime/src/library/types';
 import type { QwikCityRequestContext, UserResponseContext } from './types';
 import { HttpStatus } from './http-status-codes';
@@ -14,7 +14,7 @@ import { ErrorResponse } from './error-handler';
 
 export async function loadUserResponse(
     requestCtx: QwikCityRequestContext,
-    params: RouteParams,
+    params: PathParams,
     routeModules: RouteModule[],
     platform: Record<string, any>,
     trailingSlash?: boolean,

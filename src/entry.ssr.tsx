@@ -47,7 +47,7 @@ async function generateRoutes() {
 }
 
 function buildRouteTypesString(routes: string[]) { 
-    let string = `//This is an automatically generated file. There is no need to update it manually. Manual updates will be overridden.\nexport type Routes = {\n\t`;
+    let string = `//This is an automatically generated file. There is no need to update it manually. Manual updates will be overridden.\nexport interface PathParamsByRoute {\n\t`;
     for (const route of routes) { 
         string += `"${route}":`
         if (!route.includes("[")) { 
@@ -117,7 +117,7 @@ export type Endpoints = `;
         }
     }
 
-    string += `\n\nexport type HandlerTypesByEndpointAndMethod = {\n`
+    string += `\n\nexport interface HandlerTypesByEndpointAndMethod {\n`
 
     for (let i = 0; i < validMethodsByEndpoint.length; i++) {
         const endpointAndMethods = validMethodsByEndpoint[i];

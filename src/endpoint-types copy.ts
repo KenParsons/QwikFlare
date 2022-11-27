@@ -13,7 +13,7 @@ import { onGet as endpoint5_onGet } from "./routes/random-number/[somethingParam
 import { onGet as endpoint6_onGet } from "./routes/users/[recordId]/[propertyId]/get"
 
 
-export interface HandlerTypesByEndpointAndMethod {
+export interface HandlerTypesByRouteAndMethod {
 	"/find-user": {
 		"get": typeof endpoint0_onGet;
 		"post": typeof endpoint0_onPost;
@@ -37,4 +37,17 @@ export interface HandlerTypesByEndpointAndMethod {
 		"get": typeof endpoint6_onGet;
 	};
 }
- 
+
+type TrueIfHasOnGet<T extends keyof HandlerTypesByRouteAndMethod> = "get" extends keyof HandlerTypesByRouteAndMethod[T] ? true : false
+
+type TrueIfHasOnGetByRoute = {
+	[Route in keyof HandlerTypesByRouteAndMethod]: TrueIfHasOnGet<Route>;
+}	
+
+type KeysMatching<Object, DesiredType> = {[Key in keyof Object]-?: Object[Key] extends DesiredType ? Key : never}[keyof Object];
+//Incredible. Further details here: https://stackoverflow.com/questions/54520676/in-typescript-how-to-get-the-keys-of-an-object-type-whose-values-are-of-a-given
+
+
+type RoutesWithOnGet = KeysMatching<TrueIfHasOnGetByRoute, true>;
+const aRoute: RoutesWithOnGet = "/find-user"
+console.log(aRoute);

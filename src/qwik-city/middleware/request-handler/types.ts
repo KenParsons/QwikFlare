@@ -1,6 +1,6 @@
 import type { StreamWriter } from '@builder.io/qwik';
 import type { RenderOptions } from '@builder.io/qwik/server';
-import type { ClientPageData, RequestContext, RouteParams } from '../../runtime/src/library/types';
+import type { ClientPageData, RequestContext, PathParams } from '../../runtime/src/library/types';
 
 export interface QwikCityRequestContext<T = any> {
   request: RequestContext;
@@ -26,7 +26,7 @@ export type ResponseHandler<T = any> = (
 export interface UserResponseContext {
   type: 'endpoint' | 'pagehtml' | 'pagedata';
   url: URL;
-  params: RouteParams;
+  params: PathParams;
   status: number;
   headers: Headers;
   resolvedBody: string | number | boolean | null | undefined;

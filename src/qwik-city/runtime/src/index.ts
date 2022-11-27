@@ -9,7 +9,7 @@ export type {
   DocumentStyle,
   RequestHandler,
   RequestEvent,
-  RouteParams,
+  PathParams as RouteParams,
   ResponseContext,
   RequestContext,
   QwikCityPlan,

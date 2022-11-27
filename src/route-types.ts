@@ -1,10 +1,10 @@
 //This is an automatically generated file. There is no need to update it manually. Manual updates will be overridden.
-export type Routes = {
+export interface PathParamsByRoute {
 	"/":null;
 	"/another":null;
 	"/find-user":null;
 	"/flower":null;
-	"/random-number":null;
+	"/backend/rng":null;
 	"/article/[articleId]":{
 			"[articleId]":string;
 	};
@@ -13,6 +13,9 @@ export type Routes = {
 	};
 	"/profile/[contact]":{
 			"[contact]":string;
+	};
+	"/random-number/[somethingParam]":{
+			"[somethingParam]":string;
 	};
 	"/users/[recordId]/[propertyId]/get":{
 			"[recordId]":string;
