@@ -36,24 +36,4 @@ export default component$(() => {
     </div>
 })
 
-
-
-type functionType = (param: "teehee") => number
-type functionType2 = (param: "oohaha") => number
-type functionType3 = (param: "help") => number
-
-
-
-
-type MagicMap = {
-
-}
-
-
-
-const test: functionType = (arg) => { 
-    
-    return 3
-}
-
  

@@ -1,6 +1,7 @@
 import type { ErrorResponse } from '../../../middleware/request-handler/error-handler';
 import type { RedirectResponse } from '../../../middleware/request-handler/redirect-handler';
 import type { NoSerialize } from '@builder.io/qwik';
+import type { HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
 
 
 export interface RouteModule<BODY = unknown> {
@@ -291,7 +292,6 @@ export interface RequestEvent<QueryParams extends { [key: string]: any } | undef
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
 
-
 /**
  * @alpha
  */
@@ -299,6 +299,7 @@ export type RequestHandler<
   BODY = unknown,
   Inputs extends { [key: string]: any } | undefined = undefined
 > = (ev: RequestEvent<Inputs>) => RequestHandlerResult<BODY>;
+
 
 
 /**
