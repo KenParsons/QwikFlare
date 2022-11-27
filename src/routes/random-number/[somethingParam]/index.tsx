@@ -1,27 +1,28 @@
+import { RoutesThatUseThisOnGetHandler } from "~/endpoint-types copy";
 import { RequestHandler } from "~/qwik-city/runtime/src";
 import { route } from "~/qwik-city/runtime/src/library/routing";
 import { component$ } from "~/qwik/packages/qwik/dist/core";
 
-console.log(import.meta.url);
 
 export interface Response {
     serverMessage: string;
 }
 
-export type RequiredQueryParams = {
+
+
+export const onGet: RequestHandler<Response, {
     clientMessage: string;
     somethingElse: number;
-}
-
-export type PathParam = number;
-
-export const onGet: RequestHandler<Response, RequiredQueryParams> = async (requestEvent) => {
-    requestEvent.params;
+    somethingParam: number;
+}> = async (requestEvent) => {
+    
     console.log(requestEvent.params.somethingParam);
     return {
         serverMessage: `Random number response: ${Math.random()}`
     }
 }
+
+const test: RoutesThatUseThisOnGetHandler<onGet>
 
 
 export default component$(() => {
@@ -30,7 +31,8 @@ export default component$(() => {
             {route("/random-number/[somethingParam]", {
                 "[somethingParam]": "heyey",
                 clientMessage: "hasdfasdf",
-                somethingElse: 23235
+                somethingElse: 23235,
+                somethingParam: 234234
             })}
         </p>
     </div>
