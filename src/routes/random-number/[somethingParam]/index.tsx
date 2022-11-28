@@ -1,22 +1,18 @@
-import { RoutesThatUseThisOnGetHandler } from "~/endpoint-types copy";
 import { RequestHandler } from "~/qwik-city/runtime/src";
 import { route } from "~/qwik-city/runtime/src/library/routing";
-import { component$ } from "~/qwik/packages/qwik/dist/core";
 import { PathParamsByRoute } from "~/route-types";
+import { component$ } from "../../../qwik/packages/qwik/";
 
-
-export interface Response {
-    serverMessage: string;
+interface Response {
+    serverMessage: string
 }
 
+type Params = RouteParams<"/random-number/[somethingParam]", {
+    somethingParam: number;
+}>
 
-
-export const onGet: RequestHandler<Response, {
-    clientMessage: string;
-    somethingElse: number;
-}> = async (requestEvent) => {
-    
-    
+export const onGet: RequestHandler<Response, Params> = async (requestEvent) => {
+    const test = requestEvent.params.
     return {
         serverMessage: `Random number response: ${Math.random()}`
     }
@@ -25,10 +21,29 @@ export const onGet: RequestHandler<Response, {
 
 
 
-const test2: PathParamsByRoute[RoutesThatUseThisOnGetHandler<typeof onGet>] = {
-    "[somethingParam]": "ASDFASDF"
-}
-console.log(test2);
+
+
+
+
+
+type RouteParams<
+    Path extends keyof PathParamsByRoute,
+    UserParams extends { [key: string]: any } & PathParamsByRoute[Path] extends null ? {} : PathParamsByRoute[Path]
+> = UserParams
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 export default component$(() => {

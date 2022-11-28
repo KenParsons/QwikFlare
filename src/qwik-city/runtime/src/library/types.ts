@@ -1,48 +1,47 @@
 import type { NoSerialize } from '@builder.io/qwik';
-import { HandlerTypesByRouteAndMethod, OnGetHandlerArgumentsByRoute, OnGetRoutesThatUseTheseGenericArguments, RoutesThatUseThisOnGetHandler } from '~/endpoint-types copy';
 import type { ErrorResponse } from '../../../middleware/request-handler/error-handler';
 import type { RedirectResponse } from '../../../middleware/request-handler/redirect-handler';
-
+import type { PathParamsByRoute } from "../../../../route-types"
 
 export interface RouteModule<BODY = unknown> {
-  onDelete?: RequestHandler<BODY>;
-  onGet?: RequestHandler<BODY>;
-  onHead?: RequestHandler<BODY>;
-  onOptions?: RequestHandler<BODY>;
-  onPatch?: RequestHandler<BODY>;
-  onPost?: RequestHandler<BODY>;
-  onPut?: RequestHandler<BODY>;
-  onRequest?: RequestHandler<BODY>;
+    onDelete?: RequestHandler<any, BODY>;
+    onGet?: RequestHandler<any, BODY>;
+    onHead?: RequestHandler<any, BODY>;
+    onOptions?: RequestHandler<any, BODY>;
+    onPatch?: RequestHandler<any, BODY>;
+    onPost?: RequestHandler<any, BODY>;
+    onPut?: RequestHandler<any, BODY>;
+    onRequest?: RequestHandler<any, BODY>;
 }
 
 export interface PageModule extends RouteModule {
-  readonly default: any;
-  readonly head?: ContentModuleHead;
-  readonly headings?: ContentHeading[];
-  readonly onStaticGenerate?: StaticGenerateHandler;
+    readonly default: any;
+    readonly head?: ContentModuleHead;
+    readonly headings?: ContentHeading[];
+    readonly onStaticGenerate?: StaticGenerateHandler;
 }
 
 export interface LayoutModule extends RouteModule {
-  readonly default: any;
-  readonly head?: ContentModuleHead;
+    readonly default: any;
+    readonly head?: ContentModuleHead;
 }
 
 export interface MenuModule {
-  readonly default: ContentMenu;
+    readonly default: ContentMenu;
 }
 
 /**
  * @alpha
  */
 export interface RouteLocation {
-  readonly params: PathParams;
-  readonly href: string;
-  readonly pathname: string;
-  readonly query: Record<string, string>;
+    readonly params: PathParams;
+    readonly href: string;
+    readonly pathname: string;
+    readonly query: Record<string, string>;
 }
 
 export interface RouteNavigate {
-  path: string;
+    path: string;
 }
 
 export type MutableRouteLocation = Mutable<RouteLocation>;
@@ -53,24 +52,24 @@ type Mutable<T> = { -readonly [K in keyof T]: T[K] };
  * @alpha
  */
 export interface DocumentHeadValue {
-  /**
-   * Sets `document.title`.
-   */
-  title?: string;
-  /**
-   * Used to manually set meta tags in the head. Additionally, the `data`
-   * property could be used to set arbitrary data which the `<head>` component
-   * could later use to generate `<meta>` tags.
-   */
-  meta?: DocumentMeta[];
-  /**
-   * Used to manually append `<link>` elements to the `<head>`.
-   */
-  links?: DocumentLink[];
-  /**
-   * Used to manually append `<style>` elements to the `<head>`.
-   */
-  styles?: DocumentStyle[];
+    /**
+     * Sets `document.title`.
+     */
+    title?: string;
+    /**
+     * Used to manually set meta tags in the head. Additionally, the `data`
+     * property could be used to set arbitrary data which the `<head>` component
+     * could later use to generate `<meta>` tags.
+     */
+    meta?: DocumentMeta[];
+    /**
+     * Used to manually append `<link>` elements to the `<head>`.
+     */
+    links?: DocumentLink[];
+    /**
+     * Used to manually append `<style>` elements to the `<head>`.
+     */
+    styles?: DocumentStyle[];
 }
 
 /**
@@ -82,85 +81,85 @@ export type ResolvedDocumentHead = Required<DocumentHeadValue>;
  * @alpha
  */
 export interface DocumentMeta {
-  content?: string;
-  httpEquiv?: string;
-  name?: string;
-  property?: string;
-  key?: string;
+    content?: string;
+    httpEquiv?: string;
+    name?: string;
+    property?: string;
+    key?: string;
 }
 
 /**
  * @alpha
  */
 export interface DocumentLink {
-  as?: string;
-  crossorigin?: string;
-  disabled?: boolean;
-  href?: string;
-  hreflang?: string;
-  id?: string;
-  imagesizes?: string;
-  imagesrcset?: string;
-  integrity?: string;
-  media?: string;
-  prefetch?: string;
-  referrerpolicy?: string;
-  rel?: string;
-  sizes?: string;
-  title?: string;
-  type?: string;
-  key?: string;
+    as?: string;
+    crossorigin?: string;
+    disabled?: boolean;
+    href?: string;
+    hreflang?: string;
+    id?: string;
+    imagesizes?: string;
+    imagesrcset?: string;
+    integrity?: string;
+    media?: string;
+    prefetch?: string;
+    referrerpolicy?: string;
+    rel?: string;
+    sizes?: string;
+    title?: string;
+    type?: string;
+    key?: string;
 }
 
 /**
  * @alpha
  */
 export interface DocumentStyle {
-  style: string;
-  props?: { [propName: string]: string };
-  key?: string;
+    style: string;
+    props?: { [propName: string]: string };
+    key?: string;
 }
 
 /**
  * @alpha
  */
 export interface DocumentHeadProps<T = unknown> extends RouteLocation {
-  data: T;
-  head: ResolvedDocumentHead;
+    data: T;
+    head: ResolvedDocumentHead;
 }
 
 /**
  * @alpha
  */
 export type DocumentHead<T = unknown> =
-  | DocumentHeadValue
-  | ((props: DocumentHeadProps<GetEndpointData<T>>) => DocumentHeadValue);
+    | DocumentHeadValue
+    | ((props: DocumentHeadProps<GetEndpointData<T>>) => DocumentHeadValue);
 
 export interface ContentStateInternal {
-  contents: NoSerialize<ContentModule[]>;
+    contents: NoSerialize<ContentModule[]>;
 }
 
 export interface ContentState {
-  headings: ContentHeading[] | undefined;
-  menu: ContentMenu | undefined;
+    headings: ContentHeading[] | undefined;
+    menu: ContentMenu | undefined;
 }
 
 /**
  * @alpha
  */
 export interface ContentMenu {
-  text: string;
-  href?: string;
-  items?: ContentMenu[];
+    text: string;
+    href?: string;
+    items?: ContentMenu[];
 }
 
 /**
  * @alpha
  */
 export interface ContentHeading {
-  text: string;
-  id: string;
-  level: number;
+    text: string;
+    id: string;
+    level: number;
 }
 
 export type ContentModuleLoader = () => Promise<ContentModule>;
@@ -172,19 +171,19 @@ export type MenuModuleLoader = () => Promise<MenuModule>;
  * @alpha
  */
 export type RouteData =
-  | [pattern: RegExp, loaders: ModuleLoader[]]
-  | [pattern: RegExp, loaders: ModuleLoader[], paramNames: string[]]
-  | [
-    pattern: RegExp,
-    loaders: ModuleLoader[],
-    paramNames: string[],
-    originalPathname: string,
-    routeBundleNames: string[]
-  ];
+    | [pattern: RegExp, loaders: ModuleLoader[]]
+    | [pattern: RegExp, loaders: ModuleLoader[], paramNames: string[]]
+    | [
+        pattern: RegExp,
+        loaders: ModuleLoader[],
+        paramNames: string[],
+        originalPathname: string,
+        routeBundleNames: string[]
+    ];
 
 export type FallbackRouteData =
-  | [pattern: RegExp, loaders: ModuleLoader[]]
-  | [pattern: RegExp, loaders: ModuleLoader[], paramNames: string[]];
+    | [pattern: RegExp, loaders: ModuleLoader[]]
+    | [pattern: RegExp, loaders: ModuleLoader[], paramNames: string[]];
 
 export type MenuData = [pathname: string, menuLoader: MenuModuleLoader];
 
@@ -192,11 +191,11 @@ export type MenuData = [pathname: string, menuLoader: MenuModuleLoader];
  * @alpha
  */
 export interface QwikCityPlan {
-  routes?: RouteData[];
-  fallbackRoutes?: FallbackRouteData[];
-  menus?: MenuData[];
-  trailingSlash?: boolean;
-  cacheModules?: boolean;
+    routes?: RouteData[];
+    fallbackRoutes?: FallbackRouteData[];
+    menus?: MenuData[];
+    trailingSlash?: boolean;
+    cacheModules?: boolean;
 }
 
 /**
@@ -209,81 +208,81 @@ export type ContentModule = PageModule | LayoutModule;
 export type ContentModuleHead = DocumentHead | ResolvedDocumentHead;
 
 export type LoadedRoute = [
-  params: PathParams,
-  mods: (RouteModule | ContentModule)[],
-  menu: ContentMenu | undefined,
-  routeBundleNames: string[] | undefined
+    params: PathParams,
+    mods: (RouteModule | ContentModule)[],
+    menu: ContentMenu | undefined,
+    routeBundleNames: string[] | undefined
 ];
 
 export interface LoadedContent extends LoadedRoute {
-  pageModule: PageModule;
+    pageModule: PageModule;
 }
 
 /**
  * @alpha
  */
 export interface RequestContext {
-  formData(): Promise<FormData>;
-  headers: Headers;
-  json(): Promise<any>;
-  method: string;
-  text(): Promise<string>;
-  url: string;
+    formData(): Promise<FormData>;
+    headers: Headers;
+    json(): Promise<any>;
+    method: string;
+    text(): Promise<string>;
+    url: string;
 }
 
 /**
  * @alpha
  */
 export interface ResponseContext {
-  /**
-   * HTTP response status code.
-   *
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-   */
-  status: number;
+    /**
+     * HTTP response status code.
+     *
+     * https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+     */
+    status: number;
 
-  /**
-   * HTTP response headers.
-   *
-   * https://developer.mozilla.org/en-US/docs/Glossary/Response_header
-   */
-  readonly headers: Headers;
+    /**
+     * HTTP response headers.
+     *
+     * https://developer.mozilla.org/en-US/docs/Glossary/Response_header
+     */
+    readonly headers: Headers;
 
-  /**
-   * URL to redirect to. When called, the response will immediately
-   * end with the correct redirect status and headers.
-   * Defaults to use the `307` response status code, but can be
-   * overridden by setting the `status` argument.
-   *
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections
-   */
-  readonly redirect: (url: string, status?: number) => RedirectResponse;
+    /**
+     * URL to redirect to. When called, the response will immediately
+     * end with the correct redirect status and headers.
+     * Defaults to use the `307` response status code, but can be
+     * overridden by setting the `status` argument.
+     *
+     * https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections
+     */
+    readonly redirect: (url: string, status?: number) => RedirectResponse;
 
-  /**
-   * When called, the response will immediately end with the given
-   * status code. This could be useful to end a response with `404`,
-   * and use the 404 handler in the routes directory.
-   * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-   * for which status code should be used.
-   */
-  readonly error: (status: number) => ErrorResponse;
+    /**
+     * When called, the response will immediately end with the given
+     * status code. This could be useful to end a response with `404`,
+     * and use the 404 handler in the routes directory.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+     * for which status code should be used.
+     */
+    readonly error: (status: number) => ErrorResponse;
 }
 
 /**
  * @alpha
  */
-export interface RequestEvent<QueryParams extends { [key: string]: any } | undefined> {
-  request: RequestContext;
-  response: ResponseContext;
-  url: URL;
+export interface RequestEvent<QueryParams extends { [key: string]: any }> {
+    request: RequestContext;
+    response: ResponseContext;
+    url: URL;
 
-  /** URL Route params which have been parsed from the current url pathname. */
-  params: QueryParams 
+    /** URL Route params which have been parsed from the current url pathname. */
+    params: QueryParams
 
-  /** Platform specific data and functions */
-  platform: Record<string, any>;
-  next: () => Promise<void>;
-  abort: () => void;
+    /** Platform specific data and functions */
+    platform: Record<string, any>;
+    next: () => Promise<void>;
+    abort: () => void;
 }
 
 /**
@@ -296,37 +295,36 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 
  * @alpha
  */
 export type RequestHandler<
-  BODY = unknown,
-  QueryParams extends { [key: string]: any } | undefined = undefined
+    BODY extends unknown,
+    QueryParams extends { [key: string]: any },
 > = (ev: RequestEvent<QueryParams>) => RequestHandlerResult<BODY>;
-
 
 
 /**
  * @alpha
  * @deprecated Please use `RequestHandler` instead.
  */
-export type EndpointHandler<BODY = unknown> = RequestHandler<BODY>;
+export type EndpointHandler<BODY = unknown> = RequestHandler<any, BODY>;
 
 export type RequestHandlerBody<BODY> = BODY | string | number | boolean | undefined | null | void;
 
 export type RequestHandlerBodyFunction<BODY> = () =>
-  | RequestHandlerBody<BODY>
-  | Promise<RequestHandlerBody<BODY>>;
+    | RequestHandlerBody<BODY>
+    | Promise<RequestHandlerBody<BODY>>;
 
 export type RequestHandlerResult<BODY> =
-  | (RequestHandlerBody<BODY> | RequestHandlerBodyFunction<BODY>)
-  | Promise<RequestHandlerBody<BODY> | RequestHandlerBodyFunction<BODY>>;
+    | (RequestHandlerBody<BODY> | RequestHandlerBodyFunction<BODY>)
+    | Promise<RequestHandlerBody<BODY> | RequestHandlerBodyFunction<BODY>>;
 
 export interface EndpointResponse {
-  body: any;
-  status: number;
+    body: any;
+    status: number;
 }
 
 export interface ClientPageData extends Omit<EndpointResponse, 'status'> {
-  status?: number;
-  prefetch?: string[];
-  redirect?: string;
+    status?: number;
+    prefetch?: string[];
+    redirect?: string;
 }
 
 /**
@@ -335,14 +333,14 @@ export interface ClientPageData extends Omit<EndpointResponse, 'status'> {
 export type StaticGenerateHandler = () => Promise<StaticGenerate> | StaticGenerate;
 
 export interface StaticGenerate {
-  params?: PathParams[];
+    params?: PathParams[];
 }
 
 export interface QwikCityRenderDocument extends Document { }
 
 export interface QwikCityEnvData {
-  params: PathParams;
-  response: EndpointResponse;
+    params: PathParams;
+    response: EndpointResponse;
 }
 
 //We want to throw away the INPUTS part of the Request Handler but pass along the BODY. 
@@ -352,9 +350,9 @@ export type GetEndpointData<T> = T extends RequestHandler<infer U, infer X> ? U 
 export type EndpointMethodInputs<T> = T extends RequestHandler<infer U, infer X> ? X : undefined;
 
 export interface SimpleURL {
-  origin: string;
-  href: string;
-  pathname: string;
-  search: string;
-  hash: string;
+    origin: string;
+    href: string;
+    pathname: string;
+    search: string;
+    hash: string;
 }

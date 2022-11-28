@@ -15,7 +15,7 @@ export interface PathParamsByRoute {
 			"[contact]":string;
 	};
 	"/random-number/[somethingParam]":{
-			"[somethingParam]":string;
+			somethingParam:unknown;
 	};
 	"/users/[recordId]/[propertyId]/get":{
 			"[recordId]":string;
