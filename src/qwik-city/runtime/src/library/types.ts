@@ -1,7 +1,7 @@
+import type { NoSerialize } from '@builder.io/qwik';
+import { HandlerTypesByRouteAndMethod, OnGetHandlerArgumentsByRoute, OnGetRoutesThatUseTheseGenericArguments, RoutesThatUseThisOnGetHandler } from '~/endpoint-types copy';
 import type { ErrorResponse } from '../../../middleware/request-handler/error-handler';
 import type { RedirectResponse } from '../../../middleware/request-handler/redirect-handler';
-import type { NoSerialize } from '@builder.io/qwik';
-import type { HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
 
 
 export interface RouteModule<BODY = unknown> {
@@ -278,7 +278,7 @@ export interface RequestEvent<QueryParams extends { [key: string]: any } | undef
   url: URL;
 
   /** URL Route params which have been parsed from the current url pathname. */
-  params: PathParams & QueryParams;
+  params: QueryParams 
 
   /** Platform specific data and functions */
   platform: Record<string, any>;
@@ -297,8 +297,8 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 
  */
 export type RequestHandler<
   BODY = unknown,
-  Inputs extends { [key: string]: any } | undefined = undefined
-> = (ev: RequestEvent<Inputs>) => RequestHandlerResult<BODY>;
+  QueryParams extends { [key: string]: any } | undefined = undefined
+> = (ev: RequestEvent<QueryParams>) => RequestHandlerResult<BODY>;
 
 
 

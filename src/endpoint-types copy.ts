@@ -6,7 +6,7 @@ export type Endpoints = | "/find-user" | "/flower" | "/article/[articleId]" | "/
 import { RequestHandler } from "./qwik-city/runtime/src"
 import { onPost as endpoint2_onPost } from "./routes/article/[articleId]"
 import { onGet as endpoint0_onGet, onPost as endpoint0_onPost } from "./routes/find-user"
-import { onGet as endpoint1_onGet } from "./routes/flower"
+import { onGet as endpoint1_onGet, ProductDetails } from "./routes/flower"
 import { onPost as endpoint3_onPost } from "./routes/product/[productId]"
 import { onPost as endpoint4_onPost } from "./routes/profile/[contact]"
 import { onGet as endpoint5_onGet } from "./routes/random-number/[somethingParam]"
@@ -49,11 +49,21 @@ type KeysMatching<Object, DesiredType> = { [Key in keyof Object]-?: Object[Key] 
 
 type RoutesWithOnGet = KeysMatching<TrueIfHasOnGetByRoute, true>;
 
+type BothGenericParametersOfRequestHandler<Handler> = Handler extends RequestHandler<infer First, infer Second> ? [First, Second] : never
 
-type BothArgumentsOfRequestHandler<Handler> = Handler extends RequestHandler<infer First, infer Second> ? [First, Second] : never
 
-type OnGetHandlerArgumentsByRoute = {
-	[Route in RoutesWithOnGet]: BothArgumentsOfRequestHandler<HandlerTypesByRouteAndMethod[Route]["get"]>
+export type OnGetHandlerArgumentsByRoute = {
+	[Route in RoutesWithOnGet]: BothGenericParametersOfRequestHandler<HandlerTypesByRouteAndMethod[Route]["get"]>
 }
 
-export type RoutesThatUseThisOnGetHandler<Handler> = KeysMatching<OnGetHandlerArgumentsByRoute, BothArgumentsOfRequestHandler<Handler>>;
+export type OnGetRoutesThatUseTheseGenericArguments<Arg1, Arg2> = KeysMatching<OnGetHandlerArgumentsByRoute, [Arg1, Arg2]>;
+
+const test: OnGetRoutesThatUseTheseGenericArguments<ProductDetails, undefined>
+
+
+// type FunctionWithTwoGenericParameters<T, U> = (...args: any) => any
+
+// type TestyTesty<ExpectedParam1, ExpectedParam2, OtherType extends FunctionWithTwoGenericParameters<ExpectedParam1, ExpectedParam2>> = true
+
+
+// const test: RequestHandler
