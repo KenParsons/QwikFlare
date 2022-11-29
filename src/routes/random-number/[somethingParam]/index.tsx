@@ -4,19 +4,15 @@ import { PathParamsByRoute } from "~/route-types";
 import { component$ } from "../../../qwik/packages/qwik/";
 
 interface Response {
-    serverMessage: string;
-    test: { 
-        nested: Date;
-    };
+    test: "hey",
+    wrong: number
 }
 
 export const onGet: RequestHandler<Response> = async (requestEvent) => {
 
     return {
-        serverMessage: `Random number response: ${Math.random()}`,
-        test: { 
-            nested: new Date()
-        }
+      test: "hey",
+      wrong: 23
     }
 }
 
@@ -61,7 +57,7 @@ type Params = RouteParams<"/random-number/[somethingParam]", {
 export default component$(() => {
     const endpoint = useEndpoint("/random-number/[somethingParam]")
     endpoint.resource.promise.then(data => {
-        data.serverMessage
+        data.
     })
     
     return <div>
