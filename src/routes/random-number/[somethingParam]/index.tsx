@@ -1,35 +1,47 @@
-import { RequestHandler } from "~/qwik-city/runtime/src";
+import { RequestHandler, useEndpoint } from "~/qwik-city/runtime/src";
 import { route } from "~/qwik-city/runtime/src/library/routing";
 import { PathParamsByRoute } from "~/route-types";
 import { component$ } from "../../../qwik/packages/qwik/";
 
 interface Response {
-    serverMessage: string
+    serverMessage: string;
+    test: { 
+        nested: Date;
+    };
 }
 
-type Params = RouteParams<"/random-number/[somethingParam]", {
-    somethingParam: number;
-}>
+export const onGet: RequestHandler<Response> = async (requestEvent) => {
 
-export const onGet: RequestHandler<Response, Params> = async (requestEvent) => {
-    const test = requestEvent.params.
     return {
-        serverMessage: `Random number response: ${Math.random()}`
+        serverMessage: `Random number response: ${Math.random()}`,
+        test: { 
+            nested: new Date()
+        }
     }
 }
 
 
 
+const returnValue = onGet({});
 
 
 
 
 
 
-type RouteParams<
-    Path extends keyof PathParamsByRoute,
-    UserParams extends { [key: string]: any } & PathParamsByRoute[Path] extends null ? {} : PathParamsByRoute[Path]
-> = UserParams
+
+
+
+
+
+
+type Params = RouteParams<"/random-number/[somethingParam]", {
+    somethingParam: number;
+}>
+
+
+
+
 
 
 
@@ -47,6 +59,11 @@ type RouteParams<
 
 
 export default component$(() => {
+    const endpoint = useEndpoint("/random-number/[somethingParam]")
+    endpoint.resource.promise.then(data => {
+        data.serverMessage
+    })
+    
     return <div>
         <p>
             {route("/random-number/[somethingParam]", {
@@ -58,4 +75,32 @@ export default component$(() => {
         </p>
     </div>
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type RouteParams<
+    Path extends keyof PathParamsByRoute,
+    UserParams extends { [key: string]: any } & PathParamsByRoute[Path] extends null ? {} : PathParamsByRoute[Path]
+> = UserParams
+
+
 

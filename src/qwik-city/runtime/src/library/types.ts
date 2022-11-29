@@ -290,14 +290,21 @@ export interface RequestEvent<QueryParams extends { [key: string]: any }> {
  */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
+type Primitive = string | number | boolean
+
+// Create a type for JSON serializable values
+type JSONValue =
+    | Primitive
+    | { [key: string]: JSONValue }
+    | Array<JSONValue>;
 
 /**
  * @alpha
  */
 export type RequestHandler<
     BODY extends unknown,
-    QueryParams extends { [key: string]: any },
-> = (ev: RequestEvent<QueryParams>) => RequestHandlerResult<BODY>;
+    QueryParams extends { [key: string]: any } = {},
+> = (ev: RequestEvent<QueryParams>) => RequestHandlerResult<BODY> extends JSONValue | Promise<JSONValue> ? RequestHandlerResult<BODY> : Promise<JSONValue> | JSONValue;
 
 
 /**
