@@ -302,9 +302,11 @@ type JSONValue =
  * @alpha
  */
 export type RequestHandler<
-    BODY = JSONValue,
-    QueryParams extends { [key: string]: any } = {},
-> = (ev: RequestEvent<QueryParams>) => RequestHandlerResult<BODY> & Promise<{ [key: string]: JSONValue }> | { [key: string]: JSONValue };
+    BODY,
+    ReturnValue = BODY extends JSONValue ? BODY : {[Property in keyof BODY]: BODY[Property]} extends JSONValue ? BODY : never,
+
+    QueryParams extends { [key: string]: any } = {}
+> = (ev: RequestEvent<QueryParams>) => ReturnValue | Promise<ReturnValue> //(Promise<JSONValue> | JSONValue)
 
 
 /**
