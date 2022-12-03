@@ -151,7 +151,7 @@ export function route<Route extends keyof PathParamsByRoute>
 }
 
 
-route("/flower")
+// route("/flower")
 
 
 type DoOnGetInputsExist<Route> = Route extends keyof HandlerTypesByEndpointAndMethod ? "get" extends keyof HandlerTypesByEndpointAndMethod[Route] ?
