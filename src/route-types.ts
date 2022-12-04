@@ -6,20 +6,20 @@ export interface PathParamsByRoute {
 	"/flower":null;
 	"/backend/rng":null;
 	"/article/[articleId]":{
-			"[articleId]":string;
+			"articleId":unknown;
 	};
 	"/product/[productId]":{
-			"[productId]":string;
+			"productId":unknown;
 	};
 	"/profile/[contact]":{
-			"[contact]":string;
+			"contact":unknown;
 	};
 	"/random-number/[somethingParam]":{
-			"[somethingParam]":string;
+			"somethingParam":unknown;
 	};
 	"/users/[recordId]/[propertyId]/get":{
-			"[recordId]":string;
-"[propertyId]":string;
+			"recordId":unknown;
+"propertyId":unknown;
 	};
 	
 }

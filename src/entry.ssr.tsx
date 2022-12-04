@@ -17,6 +17,7 @@ import Root from './root';
 
 
 export default function (opts: RenderToStreamOptions) {
+    console.log('running!');
 
     //Note that this only needs to be run in dev mode since it's just type information. 
     //Can skip it as production server to save runtime load
@@ -60,11 +61,11 @@ function buildRouteTypesString(routes: string[]) {
         const slugs = route.split("/");
         for (const slug of slugs) { 
             if (slug && slug.startsWith("[") && slug.endsWith("]")) { 
-                thisRouteParams.push(slug)
+                thisRouteParams.push(slug.slice(1,-1))
             }
         }
         for (const param of thisRouteParams) { 
-            string += `"${param}":string;\n`
+            string += `"${param}":unknown;\n`
         }
         string += `\t};\n\t`
     }

@@ -1,43 +1,100 @@
-import { PathParamsByRoute } from "~/route-types";
 
 
-export const paramsValidator = createParamValidator("/article/[articleId]", {
-    "[articleId]": "number",
-    age: "number",
-    title: "string",
-    hey: (value) => {
-        if (value.length < 10) throw Error(`Too short`);
-        return value;
-    },
-});
 
-const rawParams = {
-    age: 234,
-    title: "hey",
-    hey: "as;sj"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { RequestHandler } from "~/qwik-city/runtime/src"
+
+function handler(validator: Function, _handler: RequestHandler) {
+
+    return _handler
 }
-console.log(rawParams)
-
-const params = paramsValidator(rawParams);
-console.log(params);
 
 
 
 
-export const onGet = async () => {
-    return { test: "From post: " + Math.random().toString() }
-}
 
 
 
-export function createParamValidator<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type ValidationAction =
+    | TagType
+    | ((value: string) => any)
+    | { [x: string]: ValidationAction }
+    | Array<ValidationAction>
+
+
+
+type ResultOfAction<
+    Validations extends Record<string, ValidationAction>,
+    Property extends keyof Validations
+> = Validations[Property] extends TagType ? ActualTypeByTag[Validations[Property]]
+    : Validations[Property] extends Function ? ReturnType<Validations[Property]>
+    : Validations[Property] extends ValidationAction ? ValidationAction : never
+
+export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
-    Validations extends Record<string, TagType | ((value: string) => any)> & Record<keyof PathParamsByRoute[Route], TagType | ((value: string) => any)>,
-    ValidatedValues = {
-        [Property in keyof Validations]:
-        Validations[Property] extends TagType ? ActualTypeByTag[Validations[Property]]
-        : Validations[Property] extends Function ? ReturnType<Validations[Property]> : never
-    }
+
+    Validations extends Record<string, ValidationAction>
+    & Record<keyof PathParamsByRoute[Route], ValidationAction>,
+
+    ValidatedValues = { [Property in keyof Validations]: ResultOfAction<Validations, Property> }
 >(route: Route, validations: Validations) {
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values) {
         try {
@@ -51,11 +108,8 @@ export function createParamValidator<
                 const validation = validations[key];
 
                 if (typeof validation === "string") {
-                    if (typeof value !== validation) {
-                        throw Error(`Incoming value for ${key} is ${typeof value} but was defined to be ${validation}`)
-                    }
 
-                    const tag: keyof ActualTypeByTag = validation;
+                    const tag: keyof ActualTypeByTag = validation; handler
                     if (tag === "number") {
                         values[key] = Number(value) as any;
                     }

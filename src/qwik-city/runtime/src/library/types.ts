@@ -271,13 +271,13 @@ export interface ResponseContext {
 /**
  * @alpha
  */
-export interface RequestEvent<QueryParams extends { [key: string]: any }> {
+export interface RequestEvent {
     request: RequestContext;
     response: ResponseContext;
     url: URL;
 
     /** URL Route params which have been parsed from the current url pathname. */
-    params: QueryParams
+    params: Record<string, string>
 
     /** Platform specific data and functions */
     platform: Record<string, any>;
@@ -302,18 +302,16 @@ type JSONValue =
  * @alpha
  */
 export type RequestHandler<
-    BODY,
-    ReturnValue = BODY extends JSONValue ? BODY : {[Property in keyof BODY]: BODY[Property]} extends JSONValue ? BODY : never,
-
-    QueryParams extends { [key: string]: any } = {}
-> = (ev: RequestEvent<QueryParams>) => ReturnValue | Promise<ReturnValue> //(Promise<JSONValue> | JSONValue)
+    BODY = unknown,
+    Params extends Record<string, any> = {}
+> = (ev: RequestEvent) => RequestHandlerResult<BODY>
 
 
 /**
  * @alpha
  * @deprecated Please use `RequestHandler` instead.
  */
-export type EndpointHandler<BODY = unknown> = RequestHandler<any, BODY>;
+export type EndpointHandler<BODY = unknown> = RequestHandler<BODY>;
 
 export type RequestHandlerBody<BODY> = BODY | string | number | boolean | undefined | null | void;
 
