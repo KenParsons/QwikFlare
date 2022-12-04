@@ -271,13 +271,13 @@ export interface ResponseContext {
 /**
  * @alpha
  */
-export interface RequestEvent {
+export interface RequestEvent<Params extends Record<string, any> | null> {
     request: RequestContext;
     response: ResponseContext;
     url: URL;
 
     /** URL Route params which have been parsed from the current url pathname. */
-    params: Record<string, string>
+    params: Params
 
     /** Platform specific data and functions */
     platform: Record<string, any>;
@@ -303,8 +303,8 @@ type JSONValue =
  */
 export type RequestHandler<
     BODY = unknown,
-    Params extends Record<string, any> = {}
-> = (ev: RequestEvent) => RequestHandlerResult<BODY>
+    Params extends Record<string, any> | null = null
+> = (ev: RequestEvent<Params>) => RequestHandlerResult<BODY>
 
 
 /**
