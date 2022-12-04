@@ -133,13 +133,22 @@ export function route<Route extends keyof PathParamsByRoute>
 
   const [route, params] = args;
   let path = route as string;
+  const pathParams: Record<string, boolean> = {};
+  for (const slug of path.split("/")) {
+    if (slug.startsWith('[') && slug.endsWith(']')) {
+      const startIndex = slug.startsWith("[...") ? 4 : 1;
+      pathParams[slug.slice(startIndex, -1)] = true;
+    }
+  }
+
   let queryParams = "";
   if (params) {
     for (const param in params) {
-
       const passedString: string = (params as any)[param]
-      if (param.startsWith("[") && param.endsWith("]")) {
-        path = path.replace(param, passedString)
+      if (pathParams[param]) {
+        path = path.replace(`/[${param}]`, `/${passedString}`);
+        path = path.replace(`/[...${param}]`, `/${passedString}`);
+
       } else {
         const value = (params as any)[param];
         const stringified = (typeof (value) === "object") ? JSON.stringify(value) : value;

@@ -13,7 +13,7 @@
 
 "@builder.io/qwik@file:src/qwik/packages/qwik/dist":
   "resolved" "file:src/qwik/packages/qwik/dist"
-  "version" "0.13.0-dev20221111223533"
+  "version" "0.13.0-dev20221204013002"
 
 "@cloudflare/workers-types@^2.2.2":
   "integrity" "sha512-kaMn2rueJ0PL1TYVGknTCh0X0x0d9G+FNXAFep7/4uqecEZoQb/63o6rOmMuiqI09zLuHV6xhKRXinokV/MY9A=="
@@ -3125,6 +3125,11 @@
     "cookie" "^0.4.1"
     "mustache" "^4.2.0"
     "stack-trace" "0.0.10"
+
+"zod@^3.19.1":
+  "integrity" "sha512-LYjZsEDhCdYET9ikFu6dVPGp2YH9DegXjdJToSzD9rO6fy4qiRYFoyEYwps88OseJlPyl2NOe2iJuhEhL7IpEA=="
+  "resolved" "https://registry.npmjs.org/zod/-/zod-3.19.1.tgz"
+  "version" "3.19.1"
 
 "zwitch@^2.0.0":
   "integrity" "sha512-dn/sDAIuRCsXGnBD4P+SA6nv7Y54HQZjC4SPL8PToU3714zu7wSEc1129D/i0+vvjRfOlFo4Zqrpwj+Zhcykhw=="

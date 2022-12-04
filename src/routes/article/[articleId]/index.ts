@@ -1,164 +1,133 @@
 
+import { z } from "zod"
+
+const paramsValidator = createParamsValidator("/article/[articleId]", {
+    articleId: "number",
+    description: "string",
+    userId: "number",
+    sampleId: (value) => z.string().or(z.number()).parse(value),
+    email: (value) => z.string().email().parse(value),
+    shouldBeNull: "null"
+})
+
+
+interface Response {
+    message: string,
+    params: ReturnType<typeof paramsValidator>
+}
+
+// export const onGet: RequestHandler<Response, ReturnType<typeof paramsValidator>> = async (requestEvent) => {
+//     console.log(requestEvent.params);
+//     const params = paramsValidator(requestEvent.params);
+//     return { message: "You did it!", params }
+// }
 
 
 
 
 
 
+export const onGet = handler<Response>(null, (requestEvent) => {
+    return { 
+        message: "You did it!",
+        params: requestEvent.params
+    }
+})
 
 
+import { RequestHandler } from "~/qwik-city/runtime/src";
+import { PathParamsByRoute } from "~/route-types";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { RequestHandler } from "~/qwik-city/runtime/src"
-
-function handler(validator: Function, _handler: RequestHandler) {
-
-    return _handler
+function handler<BODY = unknown>(validator: Function | null, _handler: RequestHandler<BODY>) {
+    if (!validator) return _handler;
+    return _handler //temporary for type reasons
 }
 
 
+handler;
 
 
 
+type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
+
+type PrimitiveByTag = {
+    "string": string,
+    "number": number,
+    "bigint": bigint,
+    "boolean": boolean,
+    "null": null,
+}
 
 
+type PrimitiveOptionalByTag = {
+    "string?": string | undefined,
+    "number?": number | undefined,
+    "bigint?": bigint | undefined,
+    "boolean?": boolean | undefined,
+    "null?": null | undefined
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-type ValidationAction =
-    | TagType
-    | ((value: string) => any)
-    | { [x: string]: ValidationAction }
-    | Array<ValidationAction>
-
-
+type TagType = keyof ActualTypeByTag
 
 type ResultOfAction<
-    Validations extends Record<string, ValidationAction>,
-    Property extends keyof Validations
-> = Validations[Property] extends TagType ? ActualTypeByTag[Validations[Property]]
-    : Validations[Property] extends Function ? ReturnType<Validations[Property]>
-    : Validations[Property] extends ValidationAction ? ValidationAction : never
+    EnforcedTypesByKey extends Record<string, EnforcedType>,
+    Property extends keyof EnforcedTypesByKey
+> = EnforcedTypesByKey[Property] extends TagType ? ActualTypeByTag[EnforcedTypesByKey[Property]]
+    : EnforcedTypesByKey[Property] extends (...args: any) => any ? ReturnType<EnforcedTypesByKey[Property]>
+    : never
+
+
+type EnforcedType =
+    | TagType
+    | ((t: any) => any)
+
 
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
 
-    Validations extends Record<string, ValidationAction>
-    & Record<keyof PathParamsByRoute[Route], ValidationAction>,
+    EnforcedTypesByKey extends Record<string, EnforcedType>
+    & Record<keyof PathParamsByRoute[Route], EnforcedType>,
 
-    ValidatedValues = { [Property in keyof Validations]: ResultOfAction<Validations, Property> }
->(route: Route, validations: Validations) {
+    TypeEnforced = { [Property in keyof EnforcedTypesByKey]: ResultOfAction<EnforcedTypesByKey, Property> }
+>(route: Route, validations: EnforcedTypesByKey) {
+
+
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values) {
         try {
-            for (const key in values) {
-                if (validations[key] === undefined) throw Error(`Incoming values included key '${key}' which was not defined in the valdiations`)
-            }
 
             for (const key in validations) {
-                if (!values[key]) throw Error(`Incoming values is missing key '${key}'`)
-                const value = values[key];
                 const validation = validations[key];
+                const value = values[key];
 
-                if (typeof validation === "string") {
-
-                    const tag: keyof ActualTypeByTag = validation; handler
-                    if (tag === "number") {
-                        values[key] = Number(value) as any;
-                    }
-                    if (tag === "undefined") {
-                        values[key] = undefined as any;
-                    }
-                    if (tag === "boolean") {
-                        values[key] = Boolean(value) as any;
-                    }
-
-                } else {
-                    values[key] = validation(value)
+                if (typeof (validation) === "function") {
+                    validation(value);
+                    continue;
                 }
+
+                if (!validation.endsWith("?") && values[key] === undefined) throw Error(`Incoming key:value pairs are missing key '${key}'`)
+
+                const tag: keyof ActualTypeByTag = validation;
+                if (tag === "null" || tag === "null?") {
+                    const isNull = value === null;
+                    if (!isNull && values[key] !== undefined) throw Error(`Key '${key}' is not '${tag}'. Received: ${value}`)
+                } else if (typeof value !== tag) {
+                    throw Error(`Key '${key}' is not '${tag}'. Received: ${value}`)
+                }
+
             }
 
-            return (values as unknown) as ValidatedValues
+            return (values as unknown) as TypeEnforced
         } catch (error) {
-            throw getValidatedValuesOrThrow.catch(values, validations, error as Error);
+            throw getValidatedValuesOrThrow.catch(error as Error, values, validations);
         }
     }
-    getValidatedValuesOrThrow.catch = (values: Record<string, any>, validations: Validations, error: Error): any => {
+    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations: EnforcedTypesByKey): any => {
+        values; //no-op but don't want linting error
+        validations; //no-op but don't want linting error
         throw error;
     }
 
     return getValidatedValuesOrThrow
 }
 
-
-
-
-type ActualTypeByTag = {
-    "string": string,
-    "number": number,
-    "bigint": bigint,
-    "boolean": boolean,
-    "undefined": undefined,
-    "null": null
-}
-
-type TagType = keyof ActualTypeByTag
-
 //TODO objects and arrays
-
-const test: ActualTypeByTag = {
-    bigint: BigInt(234234234),
-    string: "hey",
-    boolean: false,
-    number: 23523,
-    undefined: undefined,
-    null: null
-}
-console.log(test);
