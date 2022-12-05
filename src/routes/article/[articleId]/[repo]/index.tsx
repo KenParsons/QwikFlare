@@ -1,21 +1,31 @@
-import { z } from "zod";
-
-const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (params) => {
-    const validatedParams = z.object({
-        articleId: z.number(),
-        repo: z.literal("Qwik").or(z.literal("Astro")).or(z.literal("Solid"))
-    }).parse(params);
-
-    return validatedParams
+const validator = createParamsValidator("/article/[articleId]/[repo]/", {
+    articleId: "string",
+    repo: "string",
 });
 
 
-export const onGet = handler(paramsValidator, (requestEvent) => {
-
+export const onGet = handler(validator, async (requestEvent) => {
+    const data = await fetch("https://www.google.com").then(raw => raw.text());
+    requestEvent.params
     return {
-        message: "You did it!",
-        params: requestEvent.params
+        message: `${requestEvent.params}` + data
     }
+})
+
+
+// export const onGet = async () => {
+//     return {
+//         message: "Hey!"
+//     }
+// }
+
+
+export default component$(() => {
+    const endpoint = useEndpoint<typeof onGet>();
+    return <Resource value={endpoint} onResolved={(data) => {
+
+        return <div>{data.message}</div>
+    }} />
 })
 
 
@@ -43,37 +53,30 @@ export const onGet = handler(paramsValidator, (requestEvent) => {
 
 
 
-
-
-
-
-
-
-
 import { RequestEvent, RequestHandler } from "~/qwik-city/runtime/src";
+import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
+import { $, component$, Resource } from "~/qwik/packages/qwik/dist/core";
 import { PathParamsByRoute } from "~/route-types";
 
 
 
 function handler<
     BODY,
-    ParamsValidator extends ((...args: any) => any) | null,
-    Params extends Record<string, any> | null = ParamsValidator extends ((...args: any) => any) ? ReturnType<ParamsValidator> : null
+    ParamsValidator extends ((value: any) => any) | null,
+    Params extends Record<string, any> | null = ParamsValidator extends ((value: any) => any) ? ReturnType<ParamsValidator> : null
 >(
     paramsValidator: ParamsValidator,
     requestHandler: RequestHandler<BODY, Params>
 ) {
-    if (!paramsValidator) return requestHandler;
-
     return (requestEvent: RequestEvent<Params>) => {
-        const params = paramsValidator(requestEvent.params);
-        requestEvent.params = params;
+        if (paramsValidator) {
+            const params = paramsValidator(requestEvent.params);
+            requestEvent.params = params;
+        }
         return requestHandler(requestEvent)
     }
 }
 
-
-handler;
 
 type PrimitiveByTag = {
     "string": string,
@@ -96,32 +99,38 @@ type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
 
 type TypeTag = keyof ActualTypeByTag
 
+type ValidatorFunction = ((value: any) => any)
+
 type Validator =
     | TypeTag
-    | ((value: unknown) => any)
+    | ValidatorFunction
 
+type PathParamValidator =
+    | keyof PrimitiveByTag
+    | ValidatorFunction
 
 type ResultOfValidation<
     ValidatorByKey extends Record<string, Validator>,
     Property extends keyof ValidatorByKey
 > = ValidatorByKey[Property] extends TypeTag ? ActualTypeByTag[ValidatorByKey[Property]]
-    : ValidatorByKey[Property] extends (value: unknown) => any ? ReturnType<ValidatorByKey[Property]>
+    : ValidatorByKey[Property] extends ValidatorFunction ? ReturnType<ValidatorByKey[Property]>
     : never
 
 
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
 
-    EnforcedTypesByKeyOrFunctionThatReturnsThem extends
-    Record<string, Validator> & Record<keyof PathParamsByRoute[Route], Validator>
+    ValidatorFunctionOrValidatorByKey extends
+    ((value: any) => Record<string, any> & Record<keyof PathParamsByRoute[Route], any>)
     |
-    ((value: any) => Record<string, any> & Record<keyof PathParamsByRoute[Route], any>),
+    Record<string, Validator> & Record<keyof PathParamsByRoute[Route], PathParamValidator>,
 
-    TypeEnforcedParams = EnforcedTypesByKeyOrFunctionThatReturnsThem extends ((value: any) => any) ? ReturnType<EnforcedTypesByKeyOrFunctionThatReturnsThem>
-    : EnforcedTypesByKeyOrFunctionThatReturnsThem extends Record<string, Validator> ?
-    { [Property in keyof EnforcedTypesByKeyOrFunctionThatReturnsThem]: ResultOfValidation<EnforcedTypesByKeyOrFunctionThatReturnsThem, Property> }
+    TypeEnforcedParams = ValidatorFunctionOrValidatorByKey extends ValidatorFunction ? ReturnType<ValidatorFunctionOrValidatorByKey>
+    : ValidatorFunctionOrValidatorByKey extends Record<string, Validator> ?
+    { [Property in keyof ValidatorFunctionOrValidatorByKey]: ResultOfValidation<ValidatorFunctionOrValidatorByKey, Property> }
     : never
->(route: Route, validations: EnforcedTypesByKeyOrFunctionThatReturnsThem) {
+
+>(route: Route, validations: ValidatorFunctionOrValidatorByKey) {
 
 
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
@@ -154,19 +163,22 @@ export function createParamsValidator<
                 //In the function case, we've already continued above, but TypeScript won't recognize that
                 //That's why I think we have to typecast here
                 const typeTag = validation as keyof ActualTypeByTag;
+                const isRequired = (typeTag.endsWith("?") === false);
+                const isOptional = !isRequired;
 
-                if (!typeTag.endsWith("?") && values[key] === undefined) {
+                if (isRequired && values[key] === undefined) {
                     throw Error(`Incoming key:value pairs are missing key '${key}'`)
                 }
 
-                if (typeTag === "null" || typeTag === "null?") {
+                if (typeTag === "null" || typeTag === "null?") { // the infamous typeof bug rears its head. have to check this manually
                     const isNull = value === null;
                     if (!isNull && values[key] !== undefined) throw Error(`Key '${key}' is not '${typeTag}'. Received: ${value}`)
-                } else if (typeof value !== typeTag) {
 
-                    if (!typeTag.endsWith("?")) {
-                        throw Error(`Key '${key}' is not '${typeTag}'. Received -> Type: ${typeof value}  Value: ${value}`)
+                } else if (typeof value !== typeTag) {
+                    if (isOptional && value === undefined) {
+                        continue
                     }
+                    throw Error(`Key '${key}' is not '${typeTag}'. Received -> Type: ${typeof value}  Value: ${value}`)
                 }
 
             }
@@ -178,7 +190,7 @@ export function createParamsValidator<
         return (values as unknown) as TypeEnforcedParams
     }
 
-    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: EnforcedTypesByKeyOrFunctionThatReturnsThem, context?: any): any => {
+    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: ValidatorFunctionOrValidatorByKey, context?: any): any => {
         values; //no-op but don't want linting error
         validations; //no-op but don't want linting error
         throw error;
