@@ -1,14 +1,14 @@
 //This is an automatically generated file. There is no need to update it manually.
 //If you added or removed a route and it's not showing here, restart your dev server 🔁
 //(and after you may need to refresh your browser page to trigger the server as well 🔃)
-export type Endpoints = |"/find-user"|"/flower"|"/article/[articleId]"|"/product/[productId]"|"/profile/[contact]"|"/users/[recordId]/[propertyId]/get"
+export type Endpoints = |"/find-user"|"/flower"|"/product/[productId]"|"/profile/[contact]"|"/article/[articleId]/[repo]"|"/users/[recordId]/[propertyId]/get"
 
 import {onGet as endpoint0_onGet} from "./routes/find-user"
 import {onPost as endpoint0_onPost} from "./routes/find-user"
 import {onGet as endpoint1_onGet} from "./routes/flower"
-import {onGet as endpoint2_onGet} from "./routes/article/[articleId]"
-import {onPost as endpoint3_onPost} from "./routes/product/[productId]"
-import {onPost as endpoint4_onPost} from "./routes/profile/[contact]"
+import {onPost as endpoint2_onPost} from "./routes/product/[productId]"
+import {onPost as endpoint3_onPost} from "./routes/profile/[contact]"
+import {onGet as endpoint4_onGet} from "./routes/article/[articleId]/[repo]"
 import {onGet as endpoint5_onGet} from "./routes/users/[recordId]/[propertyId]/get"
 
 
@@ -20,14 +20,14 @@ export interface HandlerTypesByEndpointAndMethod {
 "/flower":{
 	"get": typeof endpoint1_onGet;
 };
-"/article/[articleId]":{
-	"get": typeof endpoint2_onGet;
-};
 "/product/[productId]":{
-	"post": typeof endpoint3_onPost;
+	"post": typeof endpoint2_onPost;
 };
 "/profile/[contact]":{
-	"post": typeof endpoint4_onPost;
+	"post": typeof endpoint3_onPost;
+};
+"/article/[articleId]/[repo]":{
+	"get": typeof endpoint4_onGet;
 };
 "/users/[recordId]/[propertyId]/get":{
 	"get": typeof endpoint5_onGet;

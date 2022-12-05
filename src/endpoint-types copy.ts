@@ -4,7 +4,7 @@
 export type Endpoints = | "/find-user" | "/flower" | "/article/[articleId]" | "/product/[productId]" | "/profile/[contact]" | "/random-number/[somethingParam]" | "/users/[recordId]/[propertyId]/get"
 
 import { RequestHandler } from "./qwik-city/runtime/src"
-import { onPost as endpoint2_onPost } from "./routes/article/[articleId]"
+import { onPost as endpoint2_onPost } from "./routes/article/[articleId]/[repo]"
 import { onGet as endpoint0_onGet, onPost as endpoint0_onPost } from "./routes/find-user"
 import { onGet as endpoint1_onGet, ProductDetails } from "./routes/flower"
 import { onPost as endpoint3_onPost } from "./routes/product/[productId]"

@@ -109,13 +109,7 @@ export const getRouteParams = (paramNames: string[] | undefined, match: RegExpEx
 
   return params;
 };
-
-route("/article/[articleId]", {
-  "age": 12,
-  "articleId": 2342342,
-  hey: 29802,
-  title: "hello!"
-})
+ 
 
 //Note that this doesn't keep positional information
 //So this would fail in the weird case where someone did /path/path/[id]/path/[id] or something

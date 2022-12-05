@@ -1,15 +1,19 @@
 import { z } from "zod";
+z
 
 
-const paramsValidator = createParamsValidator("/article/[articleId]", {
-    articleId: "number",
-    description: "string?",
-    email: (value) => z.string().parse(value)
+const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (params) => {
+    const validatedParams = z.object({
+        articleId: z.number(),
+        repo: z.string()
+    }).parse(params);
+
+    return validatedParams
 });
 
 
-
 export const onGet = handler(paramsValidator, (requestEvent) => {
+    requestEvent.params
 
     return {
         message: "You did it!",
@@ -113,14 +117,26 @@ type EnforcedType =
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
 
-    EnforcedTypesByKey extends Record<string, EnforcedType>
-    & Record<keyof PathParamsByRoute[Route], EnforcedType>,
+    EnforcedTypesByKeyOrValidatorFunction extends Record<string, EnforcedType>
+    & Record<keyof PathParamsByRoute[Route], EnforcedType> | ((...args: any) => Record<string, any> & Record<keyof PathParamsByRoute[Route], any>),
 
-    TypeEnforced = { [Property in keyof EnforcedTypesByKey]: ResultOfAction<EnforcedTypesByKey, Property> }
->(route: Route, validations: EnforcedTypesByKey) {
+    TypeEnforcedParams = EnforcedTypesByKeyOrValidatorFunction extends ((...args: any) => any) ? ReturnType<EnforcedTypesByKeyOrValidatorFunction>
+    : EnforcedTypesByKeyOrValidatorFunction extends Record<string, EnforcedType> ?
+    { [Property in keyof EnforcedTypesByKeyOrValidatorFunction]: ResultOfAction<EnforcedTypesByKeyOrValidatorFunction, Property> }
+    : never
+>(route: Route, validations: EnforcedTypesByKeyOrValidatorFunction) {
 
 
-    function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values): TypeEnforced {
+    function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values): TypeEnforcedParams {
+        if (typeof validations === "function") {
+            try {
+                return validations(values)
+            } catch (error) {
+                getValidatedValuesOrThrow.catch(error as Error, values)
+                return (values as unknown) as TypeEnforcedParams
+            }
+        }
+
         try {
 
             for (const key in validations) {
@@ -132,29 +148,29 @@ export function createParamsValidator<
                     continue;
                 }
 
-                if (!validation.endsWith("?") && values[key] === undefined) throw Error(`Incoming key:value pairs are missing key '${key}'`)
+                const typeTag = validation as keyof ActualTypeByTag;
+                if (!typeTag.endsWith("?") && values[key] === undefined) throw Error(`Incoming key:value pairs are missing key '${key}'`)
 
-                const tag: keyof ActualTypeByTag = validation;
 
-                if (tag === "null" || tag === "null?") {
+                if (typeTag === "null" || typeTag === "null?") {
                     const isNull = value === null;
-                    if (!isNull && values[key] !== undefined) throw Error(`Key '${key}' is not '${tag}'. Received: ${value}`)
-                } else if (typeof value !== tag) {
+                    if (!isNull && values[key] !== undefined) throw Error(`Key '${key}' is not '${typeTag}'. Received: ${value}`)
+                } else if (typeof value !== typeTag) {
 
-                    if (!validation.endsWith("?")) {
-                        throw Error(`Key '${key}' is not '${tag}'. Received -> Type: ${typeof value}  Value: ${value}`)
+                    if (!typeTag.endsWith("?")) {
+                        throw Error(`Key '${key}' is not '${typeTag}'. Received -> Type: ${typeof value}  Value: ${value}`)
                     }
                 }
 
             }
 
-            return (values as unknown) as TypeEnforced
+            return (values as unknown) as TypeEnforcedParams
         } catch (error) {
             getValidatedValuesOrThrow.catch(error as Error, values, validations);
         }
-        return (values as unknown) as TypeEnforced
+        return (values as unknown) as TypeEnforcedParams
     }
-    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations: EnforcedTypesByKey): any => {
+    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: EnforcedTypesByKeyOrValidatorFunction): any => {
         values; //no-op but don't want linting error
         validations; //no-op but don't want linting error
         throw error;

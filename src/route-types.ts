@@ -5,9 +5,6 @@ export interface PathParamsByRoute {
 	"/find-user":null;
 	"/flower":null;
 	"/backend/rng":null;
-	"/article/[articleId]":{
-			"articleId":unknown;
-	};
 	"/product/[productId]":{
 			"productId":unknown;
 	};
@@ -16,6 +13,10 @@ export interface PathParamsByRoute {
 	};
 	"/random-number/[somethingParam]":{
 			"somethingParam":unknown;
+	};
+	"/article/[articleId]/[repo]":{
+			"articleId":unknown;
+"repo":unknown;
 	};
 	"/users/[recordId]/[propertyId]/get":{
 			"recordId":unknown;
