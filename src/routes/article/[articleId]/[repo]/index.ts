@@ -75,10 +75,6 @@ function handler<
 
 handler;
 
-
-
-type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
-
 type PrimitiveByTag = {
     "string": string,
     "number": number,
@@ -96,43 +92,50 @@ type PrimitiveOptionalByTag = {
     "null?": null | undefined
 }
 
-type TagType = keyof ActualTypeByTag
+type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
 
-type ResultOfAction<
-    EnforcedTypesByKey extends Record<string, EnforcedType>,
-    Property extends keyof EnforcedTypesByKey
-> = EnforcedTypesByKey[Property] extends TagType ? ActualTypeByTag[EnforcedTypesByKey[Property]]
-    : EnforcedTypesByKey[Property] extends (...args: any) => any ? ReturnType<EnforcedTypesByKey[Property]>
+type TypeTag = keyof ActualTypeByTag
+
+type Validator =
+    | TypeTag
+    | ((value: unknown) => any)
+
+
+type ResultOfValidation<
+    ValidatorByKey extends Record<string, Validator>,
+    Property extends keyof ValidatorByKey
+> = ValidatorByKey[Property] extends TypeTag ? ActualTypeByTag[ValidatorByKey[Property]]
+    : ValidatorByKey[Property] extends (value: unknown) => any ? ReturnType<ValidatorByKey[Property]>
     : never
-
-
-type EnforcedType =
-    | TagType
-    | ((t: unknown) => any)
 
 
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
 
-    EnforcedTypesByKeyOrValidatorFunction extends Record<string, EnforcedType>
-    & Record<keyof PathParamsByRoute[Route], EnforcedType> | ((...args: any) => Record<string, any> & Record<keyof PathParamsByRoute[Route], any>),
+    EnforcedTypesByKeyOrFunctionThatReturnsThem extends
+    Record<string, Validator> & Record<keyof PathParamsByRoute[Route], Validator>
+    |
+    ((value: any) => Record<string, any> & Record<keyof PathParamsByRoute[Route], any>),
 
-    TypeEnforcedParams = EnforcedTypesByKeyOrValidatorFunction extends ((...args: any) => any) ? ReturnType<EnforcedTypesByKeyOrValidatorFunction>
-    : EnforcedTypesByKeyOrValidatorFunction extends Record<string, EnforcedType> ?
-    { [Property in keyof EnforcedTypesByKeyOrValidatorFunction]: ResultOfAction<EnforcedTypesByKeyOrValidatorFunction, Property> }
+    TypeEnforcedParams = EnforcedTypesByKeyOrFunctionThatReturnsThem extends ((value: any) => any) ? ReturnType<EnforcedTypesByKeyOrFunctionThatReturnsThem>
+    : EnforcedTypesByKeyOrFunctionThatReturnsThem extends Record<string, Validator> ?
+    { [Property in keyof EnforcedTypesByKeyOrFunctionThatReturnsThem]: ResultOfValidation<EnforcedTypesByKeyOrFunctionThatReturnsThem, Property> }
     : never
->(route: Route, validations: EnforcedTypesByKeyOrValidatorFunction) {
+>(route: Route, validations: EnforcedTypesByKeyOrFunctionThatReturnsThem) {
 
 
-    function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values): TypeEnforcedParams {
+    function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
         if (typeof validations === "function") {
             try {
-                //We have to use the runtime type validation of the general "function"
+                //We have to use the runtime validation using typeof, limited to the general "function"
                 //but the type system sees that as too loose despite the other constraints
                 //@ts-ignore
                 return validations(values)
             } catch (error) {
-                getValidatedValuesOrThrow.catch(error as Error, values)
+                getValidatedValuesOrThrow.catch(error as Error, values, validations, context)
+
+                //because we don't throw or return anything in .catch() beacuse it's open to be extended by the developer,
+                //we need to "return" this here for the sake of the types still passing through properly
                 return (values as unknown) as TypeEnforcedParams
             }
         }
@@ -151,6 +154,7 @@ export function createParamsValidator<
                 //In the function case, we've already continued above, but TypeScript won't recognize that
                 //That's why I think we have to typecast here
                 const typeTag = validation as keyof ActualTypeByTag;
+
                 if (!typeTag.endsWith("?") && values[key] === undefined) {
                     throw Error(`Incoming key:value pairs are missing key '${key}'`)
                 }
@@ -169,11 +173,12 @@ export function createParamsValidator<
 
             return (values as unknown) as TypeEnforcedParams
         } catch (error) {
-            getValidatedValuesOrThrow.catch(error as Error, values, validations);
+            getValidatedValuesOrThrow.catch(error as Error, values, validations, context);
         }
         return (values as unknown) as TypeEnforcedParams
     }
-    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: EnforcedTypesByKeyOrValidatorFunction): any => {
+
+    getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: EnforcedTypesByKeyOrFunctionThatReturnsThem, context?: any): any => {
         values; //no-op but don't want linting error
         validations; //no-op but don't want linting error
         throw error;
