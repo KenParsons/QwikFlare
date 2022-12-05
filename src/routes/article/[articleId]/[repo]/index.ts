@@ -1,17 +1,11 @@
-import { z } from "zod";
-
-const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (params) => {
-    const validatedParams = z.object({
-        articleId: z.number(),
-        repo: z.literal("Qwik").or(z.literal("Astro")).or(z.literal("Solid"))
-    }).parse(params);
-
-    return validatedParams
+const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", {
+    articleId: "number",
+    repo: "string"
 });
 
 
 export const onGet = handler(paramsValidator, (requestEvent) => {
-
+    requestEvent.params
     return {
         message: "You did it!",
         params: requestEvent.params
