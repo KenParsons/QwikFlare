@@ -1,6 +1,4 @@
 import { z } from "zod";
-z
-
 
 const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (params) => {
     const validatedParams = z.object({
@@ -13,7 +11,6 @@ const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (pa
 
 
 export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent.params
 
     return {
         message: "You did it!",
