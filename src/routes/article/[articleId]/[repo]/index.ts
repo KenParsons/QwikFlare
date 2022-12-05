@@ -130,7 +130,7 @@ export function createParamsValidator<
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values): TypeEnforcedParams {
         if (typeof validations === "function") {
             try {
-                //We have to use the runtime type validation of jthe general "function"
+                //We have to use the runtime type validation of the general "function"
                 //but the type system sees that as too loose despite the other constraints
                 //@ts-ignore
                 return validations(values)
@@ -151,8 +151,8 @@ export function createParamsValidator<
                     continue;
                 }
 
-                //in the function case, we've already continued above, but TypeScript won't recognize that
-                //So we have to typecast here
+                //In the function case, we've already continued above, but TypeScript won't recognize that
+                //That's why I think we have to typecast here
                 const typeTag = validation as keyof ActualTypeByTag;
                 if (!typeTag.endsWith("?") && values[key] === undefined) {
                     throw Error(`Incoming key:value pairs are missing key '${key}'`)
@@ -185,4 +185,3 @@ export function createParamsValidator<
     return getValidatedValuesOrThrow //TODO: Add optional second param for context to include in the catch
 }
 
-//TODO objects and arrays
