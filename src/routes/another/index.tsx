@@ -6,7 +6,7 @@ export default component$(() => {
     return <div>
         <a href={route("/article/[articleId]/[repo]", {
             articleId: 1231313,
-            repo: "Qwik"
+            repo: "Solid"
         })}>
             Click me!
         </a>

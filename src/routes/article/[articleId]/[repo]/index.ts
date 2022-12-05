@@ -5,7 +5,7 @@ z
 const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", (params) => {
     const validatedParams = z.object({
         articleId: z.number(),
-        repo: z.string()
+        repo: z.literal("Qwik").or(z.literal("Astro")).or(z.literal("Solid"))
     }).parse(params);
 
     return validatedParams
@@ -130,6 +130,9 @@ export function createParamsValidator<
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values): TypeEnforcedParams {
         if (typeof validations === "function") {
             try {
+                //We have to use the runtime type validation of jthe general "function"
+                //but the type system sees that as too loose despite the other constraints
+                //@ts-ignore
                 return validations(values)
             } catch (error) {
                 getValidatedValuesOrThrow.catch(error as Error, values)
@@ -148,9 +151,12 @@ export function createParamsValidator<
                     continue;
                 }
 
+                //in the function case, we've already continued above, but TypeScript won't recognize that
+                //So we have to typecast here
                 const typeTag = validation as keyof ActualTypeByTag;
-                if (!typeTag.endsWith("?") && values[key] === undefined) throw Error(`Incoming key:value pairs are missing key '${key}'`)
-
+                if (!typeTag.endsWith("?") && values[key] === undefined) {
+                    throw Error(`Incoming key:value pairs are missing key '${key}'`)
+                }
 
                 if (typeTag === "null" || typeTag === "null?") {
                     const isNull = value === null;
