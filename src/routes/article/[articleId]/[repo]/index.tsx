@@ -60,13 +60,13 @@ import { PathParamsByRoute } from "~/route-types";
 
 
 
-function handler<
+export function handler<
     BODY,
     ParamsValidator extends ((value: any) => any) | null,
-    Params extends Record<string, any> | null = ParamsValidator extends ((value: any) => any) ? ReturnType<ParamsValidator> : null
+    Params extends Record<string, any> | null = ParamsValidator extends ((value: any) => any) ? ReturnType<ParamsValidator> : null,
 >(
     paramsValidator: ParamsValidator,
-    requestHandler: RequestHandler<BODY, Params>
+    requestHandler: (requestEvent: RequestEvent<Params>) => BODY
 ) {
     return (requestEvent: RequestEvent<Params>) => {
         if (paramsValidator) {
