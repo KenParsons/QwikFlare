@@ -4,16 +4,16 @@
 
 "@builder.io/qwik-city@file:src/qwik/packages/qwik-city/lib":
   "resolved" "file:src/qwik/packages/qwik-city/lib"
-  "version" "0.0.120"
+  "version" "0.0.127"
   dependencies:
     "@mdx-js/mdx" "2.1.5"
     "@types/mdx" "2.0.3"
     "source-map" "0.7.4"
-    "vfile" "5.3.5"
+    "vfile" "5.3.6"
 
 "@builder.io/qwik@file:src/qwik/packages/qwik/dist":
   "resolved" "file:src/qwik/packages/qwik/dist"
-  "version" "0.13.0-dev20221204013002"
+  "version" "0.14.1-dev20221128144309"
 
 "@cloudflare/workers-types@^2.2.2":
   "integrity" "sha512-kaMn2rueJ0PL1TYVGknTCh0X0x0d9G+FNXAFep7/4uqecEZoQb/63o6rOmMuiqI09zLuHV6xhKRXinokV/MY9A=="
@@ -2960,10 +2960,10 @@
     "@types/unist" "^2.0.0"
     "unist-util-stringify-position" "^3.0.0"
 
-"vfile@^5.0.0", "vfile@5.3.5":
-  "integrity" "sha512-U1ho2ga33eZ8y8pkbQLH54uKqGhFJ6GYIHnnG5AhRpAh3OWjkrRHKa/KogbmQn8We+c0KVV3rTOgR9V/WowbXQ=="
-  "resolved" "https://registry.npmjs.org/vfile/-/vfile-5.3.5.tgz"
-  "version" "5.3.5"
+"vfile@^5.0.0", "vfile@5.3.6":
+  "integrity" "sha512-ADBsmerdGBs2WYckrLBEmuETSPyTD4TuLxTrw0DvjirxW1ra4ZwkbzG8ndsv3Q57smvHxo677MHaQrY9yxH8cA=="
+  "resolved" "https://registry.npmjs.org/vfile/-/vfile-5.3.6.tgz"
+  "version" "5.3.6"
   dependencies:
     "@types/unist" "^2.0.0"
     "is-buffer" "^2.0.0"
