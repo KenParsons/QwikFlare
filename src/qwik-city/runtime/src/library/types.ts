@@ -303,7 +303,7 @@ type JSONValue =
  */
 export type RequestHandler<
     BODY = unknown,
-    Params extends Record<string, any> | null = null
+    Params extends Record<string, any> | null = Record<string, any>
 > = (ev: RequestEvent<Params>) => RequestHandlerResult<BODY>
 
 

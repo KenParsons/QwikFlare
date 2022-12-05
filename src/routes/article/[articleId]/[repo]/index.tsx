@@ -4,28 +4,22 @@ const validator = createParamsValidator("/article/[articleId]/[repo]/", {
 });
 
 
-export const onGet = handler(validator, async (requestEvent) => {
-    const data = await fetch("https://www.google.com").then(raw => raw.text());
-    requestEvent.params
+
+interface Response {
+    message: string
+}
+
+export const onGet = handler(validator, (requestEvent): Response => {
+
     return {
-        message: `${requestEvent.params}` + data
+        message: JSON.stringify(requestEvent.params),
+        additional: "stuff"
     }
 })
 
-
-// export const onGet = async () => {
-//     return {
-//         message: "Hey!"
-//     }
-// }
-
-
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
-    return <Resource value={endpoint} onResolved={(data) => {
-
-        return <div>{data.message}</div>
-    }} />
+    return <Resource value={endpoint} onResolved={(data) => <div>{data.message}{data.additional}</div>} />
 })
 
 
@@ -49,11 +43,19 @@ export default component$(() => {
 
 
 
+// export const onGet: RequestHandler<Response> = async (requestEvent) => {
+//     requestEvent.params
+//     return {
+//         message: "Happy Monday",
+//         extra: true
+//     }
+// }
 
 
 
 
 import { RequestEvent, RequestHandler } from "~/qwik-city/runtime/src";
+import { RequestHandlerBody } from "~/qwik-city/runtime/src/library/types";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { $, component$, Resource } from "~/qwik/packages/qwik/dist/core";
 import { PathParamsByRoute } from "~/route-types";
