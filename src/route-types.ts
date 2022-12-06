@@ -14,8 +14,8 @@ export interface PathParamsByRoute {
 	"/random-number/[somethingParam]":{
 			"somethingParam":unknown;
 	};
-	"/article/[articleId]/[repo]":{
-			"articleId":unknown;
+	"/orgs/[orgName]/[repo]":{
+			"orgName":unknown;
 "repo":unknown;
 	};
 	"/users/[recordId]/[propertyId]/get":{

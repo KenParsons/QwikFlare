@@ -1,6 +1,10 @@
-const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", {
-    articleId: "number",
-    repo: "string"
+const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
+    orgName: "string",
+    repo: "string",
+    // someOtherParam: "string",
+    // someObject: (value) => z.strictObject({
+    //     test: z.string()
+    // }).parse(value)
 });
 
 
@@ -21,7 +25,11 @@ export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
 
     return <Resource value={endpoint} onResolved={(data) => {
-        return <div>{data.message}</div>
+        return <div>
+            {data.message}
+            <br />
+            {JSON.stringify(data.params)}
+        </div>
     }} />
 })
 
@@ -33,6 +41,7 @@ export default component$(() => {
 
 
 
+import { z } from "zod";
 import { RequestEvent } from "~/qwik-city/runtime/src";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
