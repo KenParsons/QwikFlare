@@ -1,28 +1,25 @@
-const paramsValidator = createParamsValidator("/article/[articleId]/[repo]", {
-    articleId: "number",
-    repo: "string"
+const validator = createParamsValidator("/article/[articleId]/[repo]/", {
+    articleId: "string",
+    repo: "string",
 });
 
 
-export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent.params
+
+interface Response {
+    message: string
+}
+
+export const onGet = handler(validator, (requestEvent): Response => {
+
     return {
-        message: "You did it!",
-        params: requestEvent.params
+        message: JSON.stringify(requestEvent.params),
+        additional: "stuff"
     }
 })
 
-
-
-
-
-
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
-
-    return <Resource value={endpoint} onResolved={(data) => {
-        return <div>{data.message}</div>
-    }} />
+    return <Resource value={endpoint} onResolved={(data) => <div>{data.message}{data.additional}</div>} />
 })
 
 
@@ -33,11 +30,35 @@ export default component$(() => {
 
 
 
-import { RequestEvent } from "~/qwik-city/runtime/src";
-import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
-import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
-import { PathParamsByRoute } from "~/route-types";
 
+
+
+
+
+
+
+
+
+
+
+
+
+// export const onGet: RequestHandler<Response> = async (requestEvent) => {
+//     requestEvent.params
+//     return {
+//         message: "Happy Monday",
+//         extra: true
+//     }
+// }
+
+
+
+
+import { RequestEvent, RequestHandler } from "~/qwik-city/runtime/src";
+import { RequestHandlerBody } from "~/qwik-city/runtime/src/library/types";
+import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
+import { $, component$, Resource } from "~/qwik/packages/qwik/dist/core";
+import { PathParamsByRoute } from "~/route-types";
 
 
 
@@ -172,12 +193,11 @@ export function createParamsValidator<
     }
 
     getValidatedValuesOrThrow.catch = (error: Error, values: Record<string, any>, validations?: ValidatorFunctionOrValidatorByKey, context?: any): any => {
-        context; //no-op but don't want linting error
         values; //no-op but don't want linting error
         validations; //no-op but don't want linting error
         throw error;
     }
 
-    return getValidatedValuesOrThrow
+    return getValidatedValuesOrThrow //TODO: Add optional second param for context to include in the catch
 }
 
