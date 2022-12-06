@@ -1,5 +1,5 @@
-import { PathParamsByRoute } from '~/route-types';
-import { HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
+import { PathParamsByRoute } from '~/routing-config/route-types';
+import { HandlerTypesByEndpointAndMethod } from '~/routing-config/endpoint-types';
 import { MODULE_CACHE } from './constants';
 import type {
   ContentMenu,

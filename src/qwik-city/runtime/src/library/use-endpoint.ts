@@ -2,7 +2,7 @@ import { useWatch$ } from '@builder.io/qwik';
 import { $, QRL, ResourceReturn, useResource$, useSignal } from '@builder.io/qwik';
 import { isServer } from '@builder.io/qwik/build';
 import { Endpoints, HandlerTypesByEndpointAndMethod } from '~/endpoint-types';
-import { getOnMethodsByPath } from '~/getOnMethodsByPath';
+import { getOnMethodsByPath } from '~/route-file-generation/city-plan-extraction';
 import { dispatchPrefetchEvent } from './client-navigate';
 import type { ClientPageData, EndpointMethodInputs, GetEndpointData, RequestHandler } from './types';
 import { useLocation, useQwikCityEnv } from './use-functions';

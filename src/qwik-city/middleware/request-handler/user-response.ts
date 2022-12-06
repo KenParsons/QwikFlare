@@ -135,9 +135,7 @@ export async function loadUserResponse(
                     error,
                 };
 
-                const inputs = {
-                    test: 'suh dude'
-                }
+
                 // create user request event, which is a narrowed down request context
                 const requestEv: RequestEvent<{ [key: string]: any }> = {
                     request,
@@ -145,7 +143,6 @@ export async function loadUserResponse(
                     params: { ...params },
                     response,
                     platform,
-                    inputs,
                     next,
                     abort,
                 };

@@ -132,6 +132,10 @@ a.mindblow:hover {
     width: fit-content;
 }
 
+.test-background * { 
+    z-index: 1;
+}
+
 .test-background:after { 
     content: '';
     position: absolute;

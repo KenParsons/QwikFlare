@@ -1,4 +1,4 @@
-const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
+const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]/", {
     orgName: "string",
     repo: "string",
     // someOtherParam: "string",
@@ -45,7 +45,7 @@ import { z } from "zod";
 import { RequestEvent } from "~/qwik-city/runtime/src";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
-import { PathParamsByRoute } from "~/route-types";
+import { PathParamsByRoute } from "~/routing-config/route-types";
 
 
 

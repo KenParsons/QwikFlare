@@ -1,6 +1,7 @@
 import { component$, Signal, useServerMount$, useSignal, useStore } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { Link } from '@builder.io/qwik-city';
+import { route } from '~/qwik-city/runtime/src/library/routing';
 
 
 export const MyComp = component$<{ parentSignal?: Signal<number> }>((props) => {
@@ -33,6 +34,10 @@ export default component$(() => {
     const parentSignal = useSignal(2);
     return (
         <div>
+            {route("/orgs/[orgName]/[repo]/", { 
+                orgName: "asdfasdf",
+                repo: "string"
+            })}
             <SvgTest />
             <button onClick$={() => parentSignal.value = 2382882}>Change from parent</button>
             <MyComp />
