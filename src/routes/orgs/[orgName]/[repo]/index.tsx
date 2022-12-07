@@ -12,13 +12,13 @@ export const onGet = handler(paramsValidator, (requestEvent) => {
         params: requestEvent.params
     }
 })
-type type1 = {orgName: string};
-type type2 = {orgName: number};
+type type1 = { orgName: string };
+type type2 = { orgName: number };
 
-type type3 = type1  &  type2;
-const test3: type3 = { 
+type type3 = type1 & type2;
+const test3: type3 = {
     orgName: "hey!"
- }
+}
 
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
@@ -61,7 +61,7 @@ type ObjType = {
 
 
 import { z } from "zod";
-import { RequestEvent } from "~/qwik-city/runtime/src";
+import { RequestContext, RequestEvent } from "~/qwik-city/runtime/src";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
 import { PathParamsByRoute } from "~/routing-config/route-types";
@@ -234,3 +234,61 @@ export function createParamsValidator<
     return getValidatedValuesOrThrow
 }
 
+
+
+
+/*
+                const urlObject = new URL(url);
+
+                const searchParams = decodeQueryParams(urlObject.searchParams);
+                const routeParams = decodeRouteParams(params);
+*/
+
+export const buildInputsFromRequestBody = async (request: RequestContext) => {
+    const text = await request.text();
+    try {
+        return JSON.parse(text) as { [key: string]: any };
+    } catch {
+        return { _body_text: text }
+    }
+}
+
+export const decodeRouteParams = (routeParams: Record<string, string>) => {
+    const decoded: { [key: string]: any } = {};
+    for (const param in routeParams) {
+        const value = routeParams[param];
+        decoded[param] = convertToTypeFromString(value)
+    }
+    return decoded
+}
+
+export const decodeQueryParams = (queryParams: URLSearchParams) => {
+    const decoded: { [key: string]: any } = {}
+    queryParams.forEach((value, key) => {
+        decoded[key] = convertToTypeFromString(value)
+    });
+    return decoded;
+}
+
+export const convertToTypeFromString = (str: string) => {
+    if (str.trim().startsWith("{") || str.trim().startsWith("[")) {
+        try {
+            return JSON.parse(str)
+        } catch {
+            return convertToPrimitiveFromString(str);
+        }
+    } else {
+        return convertToPrimitiveFromString(str);
+    }
+
+}
+
+const convertToPrimitiveFromString = (str: string) => {
+    if (str === "null") return null;
+    if (str === "undefined") return undefined;
+    if (str === "true") return true;
+    if (str === "false") return false;
+    const number = Number(str);
+    if (!Number.isNaN(number)) return number
+    else return str;
+}
