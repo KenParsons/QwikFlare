@@ -1,11 +1,12 @@
 const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
-    orgName: "string",
-    repo: "string",
+    orgName: "number",
+    "orgName?": "string", //need to figure out a good way to avoid this situation
+    repo: "number",
     "test?": "string"
 });
 
 export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent
+    requestEvent.params
     return {
         message: "You did it!",
         params: requestEvent.params
@@ -26,18 +27,9 @@ export default component$(() => {
 })
 
 
-type RemoveString<
-    T extends string,
-    RemoveThis extends string
-> = T extends `${infer Before}${RemoveThis}${infer After}`
-    ? RemoveString<`${Before}${After}`, RemoveThis>
-    : T
-
-
-
 
 type EndsWithQM<T> = T extends `${string}?` ? true : false
-type RemoveEndingQM<T extends string> = T extends `${infer AllButLast}?` ? AllButLast : T
+type RemoveEndingQM<T> = T extends `${infer AllButLast}?` ? AllButLast : T
 
 
 const test: EndsWithQM<"hi"> = false
@@ -108,9 +100,11 @@ type PrimitiveOptionalByTag = {
     "boolean?": boolean | undefined,
     "null?": null | undefined
 }
-type Primitive = keyof PrimitiveByTag
+type Primitive = keyof PrimitiveByTag | `${string}|${keyof PrimitiveByTag}`
 
 type LiteralFromString<T extends string> = T extends `${infer X}` ? X : never;
+
+
 type MultiPrimitive<
     T extends Primitive | `${string}|${Primitive}`
 > = T extends `${infer X}`
@@ -119,9 +113,6 @@ type MultiPrimitive<
     : "One of your primitives is a typo"
     : "One of your primitives is a typo"
 
-type Ensure<T extends Primitive> = T
-
-type test = Ensure<MultiPrimitive<"string">>
 
 
 
@@ -148,6 +139,8 @@ type ResultOfValidation<
     : never
 
 
+
+
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
 
@@ -156,13 +149,15 @@ export function createParamsValidator<
     |
     Record<string, Validator> & Record<keyof PathParamsByRoute[Route], PathParamValidator>,
 
-    TypeEnforcedParams = ValidatorFunctionOrValidatorByKey extends ValidatorFunction ? ReturnType<ValidatorFunctionOrValidatorByKey>
+    _TypeEnforcedParams = ValidatorFunctionOrValidatorByKey extends ValidatorFunction ? ReturnType<ValidatorFunctionOrValidatorByKey>
     : ValidatorFunctionOrValidatorByKey extends Record<string, Validator> ?
     { [Property in keyof ValidatorFunctionOrValidatorByKey]: ResultOfValidation<ValidatorFunctionOrValidatorByKey, Property> }
     : never
 
 >(route: Route, validations: ValidatorFunctionOrValidatorByKey) {
 
+    type TypeEnforcedParams = { [P in keyof _TypeEnforcedParams as RemoveEndingQM<P>]: EndsWithQM<P> extends true ? _TypeEnforcedParams[P] | undefined : _TypeEnforcedParams[P] }
+    //NEED TO DO ACTUAL RUNTIME USE OF THIS STILL^^^
 
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
         if (typeof validations === "function") {
