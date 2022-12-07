@@ -110,18 +110,20 @@ type PrimitiveOptionalByTag = {
 }
 type Primitive = keyof PrimitiveByTag
 
-
-type PrimitiveChainingMagicWIP<T extends Primitive | `${Primitive}|${string}`> =
-    String.Split<T, "|">[number] extends Primitive
-    ? String.Split<T, "|">[number]
-    : never
-
 type LiteralFromString<T extends string> = T extends `${infer X}` ? X : never;
+type MultiPrimitive<
+    T extends Primitive | `${string}|${Primitive}`
+> = T extends `${infer X}`
+    ? String.Split<X, "|">[number] extends Primitive
+    ? String.Split<X, "|">[number]
+    : "One of your primitives is a typo"
+    : "One of your primitives is a typo"
+
+type Ensure<T extends Primitive> = T
+
+type test = Ensure<MultiPrimitive<"string">>
 
 
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type testPrim = PrimitiveChainingMagicWIP<"bigint|booan">
 
 
 type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
@@ -160,7 +162,7 @@ export function createParamsValidator<
     : never
 
 >(route: Route, validations: ValidatorFunctionOrValidatorByKey) {
-    
+
 
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
         if (typeof validations === "function") {
@@ -225,6 +227,8 @@ export function createParamsValidator<
         validations; //no-op but don't want linting error
         throw error;
     }
+
+    getValidatedValuesOrThrow.route = route;
 
     return getValidatedValuesOrThrow
 }
