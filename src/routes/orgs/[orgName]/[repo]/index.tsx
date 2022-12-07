@@ -12,7 +12,13 @@ export const onGet = handler(paramsValidator, (requestEvent) => {
         params: requestEvent.params
     }
 })
+type type1 = {orgName: string};
+type type2 = {orgName: number};
 
+type type3 = type1  &  type2;
+const test3: type3 = { 
+    orgName: "hey!"
+ }
 
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
