@@ -4,16 +4,16 @@
 
 "@builder.io/qwik-city@file:src/qwik/packages/qwik-city/lib":
   "resolved" "file:src/qwik/packages/qwik-city/lib"
-  "version" "0.0.127"
+  "version" "0.0.120"
   dependencies:
     "@mdx-js/mdx" "2.1.5"
     "@types/mdx" "2.0.3"
     "source-map" "0.7.4"
-    "vfile" "5.3.6"
+    "vfile" "5.3.5"
 
 "@builder.io/qwik@file:src/qwik/packages/qwik/dist":
   "resolved" "file:src/qwik/packages/qwik/dist"
-  "version" "0.14.1-dev20221128144309"
+  "version" "0.13.0-dev20221204203039"
 
 "@cloudflare/workers-types@^2.2.2":
   "integrity" "sha512-kaMn2rueJ0PL1TYVGknTCh0X0x0d9G+FNXAFep7/4uqecEZoQb/63o6rOmMuiqI09zLuHV6xhKRXinokV/MY9A=="
@@ -2746,6 +2746,11 @@
   "resolved" "https://registry.npmjs.org/ts-interface-checker/-/ts-interface-checker-0.1.13.tgz"
   "version" "0.1.13"
 
+"ts-toolbelt@^9.6.0":
+  "integrity" "sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w=="
+  "resolved" "https://registry.npmjs.org/ts-toolbelt/-/ts-toolbelt-9.6.0.tgz"
+  "version" "9.6.0"
+
 "tsconfig-paths@^4.0.0":
   "integrity" "sha512-AHx4Euop/dXFC+Vx589alFba8QItjF+8hf8LtmuiCwHyI4rHXQtOOENaM8kvYf5fR0dRChy3wzWIZ9WbB7FWow=="
   "resolved" "https://registry.npmjs.org/tsconfig-paths/-/tsconfig-paths-4.1.0.tgz"
@@ -2960,10 +2965,20 @@
     "@types/unist" "^2.0.0"
     "unist-util-stringify-position" "^3.0.0"
 
-"vfile@^5.0.0", "vfile@5.3.6":
+"vfile@^5.0.0":
   "integrity" "sha512-ADBsmerdGBs2WYckrLBEmuETSPyTD4TuLxTrw0DvjirxW1ra4ZwkbzG8ndsv3Q57smvHxo677MHaQrY9yxH8cA=="
   "resolved" "https://registry.npmjs.org/vfile/-/vfile-5.3.6.tgz"
   "version" "5.3.6"
+  dependencies:
+    "@types/unist" "^2.0.0"
+    "is-buffer" "^2.0.0"
+    "unist-util-stringify-position" "^3.0.0"
+    "vfile-message" "^3.0.0"
+
+"vfile@5.3.5":
+  "integrity" "sha512-U1ho2ga33eZ8y8pkbQLH54uKqGhFJ6GYIHnnG5AhRpAh3OWjkrRHKa/KogbmQn8We+c0KVV3rTOgR9V/WowbXQ=="
+  "resolved" "https://registry.npmjs.org/vfile/-/vfile-5.3.5.tgz"
+  "version" "5.3.5"
   dependencies:
     "@types/unist" "^2.0.0"
     "is-buffer" "^2.0.0"

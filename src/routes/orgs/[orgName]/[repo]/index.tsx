@@ -1,24 +1,16 @@
-const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]/", {
+const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
     orgName: "string",
     repo: "string",
-    // someOtherParam: "string",
-    // someObject: (value) => z.strictObject({
-    //     test: z.string()
-    // }).parse(value)
+    "test?": "string"
 });
 
-
 export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent.params
+    requestEvent
     return {
         message: "You did it!",
         params: requestEvent.params
     }
 })
-
-
-
-
 
 
 export default component$(() => {
@@ -34,9 +26,38 @@ export default component$(() => {
 })
 
 
+type RemoveString<
+    T extends string,
+    RemoveThis extends string
+> = T extends `${infer Before}${RemoveThis}${infer After}`
+    ? RemoveString<`${Before}${After}`, RemoveThis>
+    : T
 
 
 
+
+type EndsWithQM<T> = T extends `${string}?` ? true : false
+type RemoveEndingQM<T extends string> = T extends `${infer AllButLast}?` ? AllButLast : T
+
+
+const test: EndsWithQM<"hi"> = false
+
+console.log(test);
+const test2: RemoveEndingQM<"hi?"> = "hi"
+
+console.log(test2);
+
+const testObj = {
+    orgName: "string",
+    repo: "string",
+    "test?": "string"
+};
+
+type Keys = RemoveEndingQM<keyof typeof testObj>
+
+type ObjType = {
+    [Property in keyof typeof testObj]: typeof testObj[Property]
+}
 
 
 
@@ -46,8 +67,7 @@ import { RequestEvent } from "~/qwik-city/runtime/src";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
 import { PathParamsByRoute } from "~/routing-config/route-types";
-
-
+import { String } from "ts-toolbelt"
 
 
 export function handler<
@@ -58,6 +78,8 @@ export function handler<
     paramsValidator: ParamsValidator,
     requestHandler: (requestEvent: RequestEvent<Params>) => BODY
 ) {
+    //TODO: DEV/BUILD-TIME ONLY! runtime check that filename/route name is correct with what the paramsValidator was given
+    //maybe give paramsvalidator a secret hidden key with that info on it so we can check here at build time
     return (requestEvent: RequestEvent<Params>) => {
         if (paramsValidator) {
             const params = paramsValidator(requestEvent.params);
@@ -66,6 +88,8 @@ export function handler<
         return requestHandler(requestEvent)
     }
 }
+
+
 
 
 type PrimitiveByTag = {
@@ -84,6 +108,21 @@ type PrimitiveOptionalByTag = {
     "boolean?": boolean | undefined,
     "null?": null | undefined
 }
+type Primitive = keyof PrimitiveByTag
+
+
+type PrimitiveChainingMagicWIP<T extends Primitive | `${Primitive}|${string}`> =
+    String.Split<T, "|">[number] extends Primitive
+    ? String.Split<T, "|">[number]
+    : never
+
+type LiteralFromString<T extends string> = T extends `${infer X}` ? X : never;
+
+
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type testPrim = PrimitiveChainingMagicWIP<"bigint|booan">
+
 
 type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
 
@@ -121,7 +160,7 @@ export function createParamsValidator<
     : never
 
 >(route: Route, validations: ValidatorFunctionOrValidatorByKey) {
-
+    
 
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
         if (typeof validations === "function") {
