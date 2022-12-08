@@ -1,5 +1,5 @@
 import { getOnMethodsByPath, getRoutes, Methods } from './city-plan-extraction';
-export const routesConfigDirectoryName = "routing-config";
+export const routesConfigDirectoryName = "typed-routing";
 
 
 export async function generateRoutes() {
@@ -74,12 +74,12 @@ export type Endpoints = `;
             const methods = endpointAndMethods[endpoint];
             for (const method of methods) {
                 //true loop, could have one or all of the possible methods
-                string += `import {${method} as endpoint${i}_${method}} from "./routes${endpoint}"\n`
+                string += `import {${method} as endpoint${i}_${method}} from "~/routes${endpoint}"\n`
             }
         }
     }
 
-    string += `export interface HandlerTypesByEndpointAndMethod {`
+    string += `export interface HandlerTypesByRouteAndMethod {`
 
     for (let i = 0; i < validMethodsByEndpoint.length; i++) {
         const endpointAndMethods = validMethodsByEndpoint[i];

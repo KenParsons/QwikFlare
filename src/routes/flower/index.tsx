@@ -1,27 +1,6 @@
 import { component$, useClientEffect$, useStore, useStylesScoped$ } from '@builder.io/qwik';
 import { DocumentHead, useLocation } from '@builder.io/qwik-city';
-import { RequestHandler } from '~/qwik-city/runtime/src';
 import styles from './flower.css?inline';
-
-
-export interface ProductDetails {
-    title: string;
-    description: string;
-    price: string;
-    timeStamp: string;
-    random: number;
-}
-
-export const onGet: RequestHandler<ProductDetails> = async () => {
-    //pretend database fetch
-    return {
-        title: "Flowers",
-        description: "🌹🌷💐💐🌼🌻💐🌺🌺🌹🌼💐",
-        price: "$70",
-        timeStamp: (new Date()).toLocaleTimeString(),
-        random: Math.random(),
-    }
-}
 
 
 export default component$(() => {

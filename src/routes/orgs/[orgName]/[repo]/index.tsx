@@ -1,24 +1,17 @@
 const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
     orgName: "number",
-    "orgName?": "string", //need to figure out a good way to avoid this situation
+    "orgName?": "string",
     repo: "number",
     "test?": "string"
 });
 
 export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent.params
-    return {
+    requestEvent.params.test
+        return {
         message: "You did it!",
-        params: requestEvent.params
+            params: requestEvent.params
     }
 })
-type type1 = { orgName: string };
-type type2 = { orgName: number };
-
-type type3 = type1 & type2;
-const test3: type3 = {
-    orgName: "hey!"
-}
 
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
@@ -38,34 +31,12 @@ type EndsWithQM<T> = T extends `${string}?` ? true : false
 type RemoveEndingQM<T> = T extends `${infer AllButLast}?` ? AllButLast : T
 
 
-const test: EndsWithQM<"hi"> = false
-
-console.log(test);
-const test2: RemoveEndingQM<"hi?"> = "hi"
-
-console.log(test2);
-
-const testObj = {
-    orgName: "string",
-    repo: "string",
-    "test?": "string"
-};
-
-type Keys = RemoveEndingQM<keyof typeof testObj>
-
-type ObjType = {
-    [Property in keyof typeof testObj]: typeof testObj[Property]
-}
 
 
-
-
-import { z } from "zod";
-import { RequestContext, RequestEvent } from "~/qwik-city/runtime/src";
+import { RequestEvent } from "~/qwik-city/runtime/src";
 import { useEndpoint } from "~/qwik/packages/qwik-city/lib";
 import { component$, Resource } from "~/qwik/packages/qwik/dist/core";
-import { PathParamsByRoute } from "~/routing-config/route-types";
-import { String } from "ts-toolbelt"
+import { PathParamsByRoute } from "~/typed-routing/route-types";
 
 
 export function handler<
@@ -106,22 +77,6 @@ type PrimitiveOptionalByTag = {
     "boolean?": boolean | undefined,
     "null?": null | undefined
 }
-type Primitive = keyof PrimitiveByTag | `${string}|${keyof PrimitiveByTag}`
-
-type LiteralFromString<T extends string> = T extends `${infer X}` ? X : never;
-
-
-type MultiPrimitive<
-    T extends Primitive | `${string}|${Primitive}`
-> = T extends `${infer X}`
-    ? String.Split<X, "|">[number] extends Primitive
-    ? String.Split<X, "|">[number]
-    : "One of your primitives is a typo"
-    : "One of your primitives is a typo"
-
-
-
-
 
 type ActualTypeByTag = PrimitiveByTag & PrimitiveOptionalByTag
 
@@ -162,9 +117,16 @@ export function createParamsValidator<
 
 >(route: Route, validations: ValidatorFunctionOrValidatorByKey) {
 
-    type TypeEnforcedParams = { [P in keyof _TypeEnforcedParams as RemoveEndingQM<P>]: EndsWithQM<P> extends true ? _TypeEnforcedParams[P] | undefined : _TypeEnforcedParams[P] }
+    type __TypeEnforcedParams = { [P in keyof _TypeEnforcedParams as RemoveEndingQM<P>]: EndsWithQM<P> extends true ? _TypeEnforcedParams[P] | undefined : _TypeEnforcedParams[P] }
     //NEED TO DO ACTUAL RUNTIME USE OF THIS STILL^^^
 
+    type UndefinedProperties<T> = {
+        [P in keyof T]-?: undefined extends T[P] ? P : never
+    }[keyof T]
+
+    type UndefinedUnionsAsOptional<T> = Partial<Pick<T, UndefinedProperties<T>>> & Pick<T, Exclude<keyof T, UndefinedProperties<T>>>
+
+    type TypeEnforcedParams = UndefinedUnionsAsOptional<__TypeEnforcedParams>
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
         if (typeof validations === "function") {
             try {
@@ -235,60 +197,3 @@ export function createParamsValidator<
 }
 
 
-
-
-/*
-                const urlObject = new URL(url);
-
-                const searchParams = decodeQueryParams(urlObject.searchParams);
-                const routeParams = decodeRouteParams(params);
-*/
-
-export const buildInputsFromRequestBody = async (request: RequestContext) => {
-    const text = await request.text();
-    try {
-        return JSON.parse(text) as { [key: string]: any };
-    } catch {
-        return { _body_text: text }
-    }
-}
-
-export const decodeRouteParams = (routeParams: Record<string, string>) => {
-    const decoded: { [key: string]: any } = {};
-    for (const param in routeParams) {
-        const value = routeParams[param];
-        decoded[param] = convertToTypeFromString(value)
-    }
-    return decoded
-}
-
-export const decodeQueryParams = (queryParams: URLSearchParams) => {
-    const decoded: { [key: string]: any } = {}
-    queryParams.forEach((value, key) => {
-        decoded[key] = convertToTypeFromString(value)
-    });
-    return decoded;
-}
-
-export const convertToTypeFromString = (str: string) => {
-    if (str.trim().startsWith("{") || str.trim().startsWith("[")) {
-        try {
-            return JSON.parse(str)
-        } catch {
-            return convertToPrimitiveFromString(str);
-        }
-    } else {
-        return convertToPrimitiveFromString(str);
-    }
-
-}
-
-const convertToPrimitiveFromString = (str: string) => {
-    if (str === "null") return null;
-    if (str === "undefined") return undefined;
-    if (str === "true") return true;
-    if (str === "false") return false;
-    const number = Number(str);
-    if (!Number.isNaN(number)) return number
-    else return str;
-}
