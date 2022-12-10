@@ -1,16 +1,26 @@
 
 /*
-    const urlObject = new URL(url);
+    The following would go in the user-response.ts file around line ~140:
 
+    const urlObject = new URL(url);
     const searchParams = decodeQueryParams(urlObject.searchParams);
     const routeParams = decodeRouteParams(params);
 
-    then on the creation of the requestEvent,
-    make sure `params` for it is {...searchParams, ...routeParams}
+    const requestEv: RequestEvent<{ [key: string]: any }> = {
+        request,
+        url: urlObject,
+        params: { ...searchParams, ...routeParams },
+        response,
+        platform,
+        next,
+        abort,
+    };
 */
 
 
 
+//In this file we can put a comment up top explaining how they can swap out their
+//own convertToTypeFromString() and convertToStringFromType() functions for custom
 
 export const decodeRouteParams = (routeParams: Record<string, string>) => {
     const decoded: { [key: string]: any } = {};
@@ -50,4 +60,8 @@ const convertToPrimitiveFromString = (str: string) => {
     const number = Number(str);
     if (!Number.isNaN(number)) return number
     else return str;
+}
+
+export const convertToStringFromType = (value: any) => { 
+    return (typeof (value) === "object") ? JSON.stringify(value) : `${value}`;
 }

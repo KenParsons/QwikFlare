@@ -1,4 +1,5 @@
 import { EndpointMethodInputs as TypedParamsOf } from "~/qwik-city/runtime/src/library/types";
+import { convertToStringFromType } from "./endcoding-decoding";
 import { HandlerTypesByRouteAndMethod } from "./endpoint-types";
 import { PathParamsByRoute } from "./route-types";
 
@@ -37,7 +38,7 @@ export function route<Route extends keyof PathParamsByRoute>
 
       } else {
         const value = (params as any)[param];
-        const stringified = (typeof (value) === "object") ? JSON.stringify(value) : value;
+        const stringified = convertToStringFromType(value);
         queryParams += `${param}=${stringified}&`
       }
     }

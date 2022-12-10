@@ -1,17 +1,27 @@
-const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]", {
-    orgName: "number",
-    "orgName?": "string",
-    repo: "number",
-    "test?": "string"
+const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]/", {
+    //the following two will be required because [orgName] and [repo] are in the path
+    orgName: "string",
+    repo: "string",
+
+    //added support for the following syntax, so the question mark looks more like Typescript
+    //also will allow us to do optional object/arrays in the future without needing validator function
+    //Note that in the params (including the type!) it's converted back to .test, not ["test?"]
+    "test?": "string",
+
+    //so we could remove this following syntax if we want. leaving both for now
+    anotherTest: "string?"
 });
 
+paramsValidator.route
+
 export const onGet = handler(paramsValidator, (requestEvent) => {
-    requestEvent.params.test
-        return {
+    requestEvent.params.
+    return {
         message: "You did it!",
-            params: requestEvent.params
+        params: requestEvent.params
     }
 })
+
 
 export default component$(() => {
     const endpoint = useEndpoint<typeof onGet>();
@@ -48,7 +58,8 @@ export function handler<
     requestHandler: (requestEvent: RequestEvent<Params>) => BODY
 ) {
     //TODO: DEV/BUILD-TIME ONLY! runtime check that filename/route name is correct with what the paramsValidator was given
-    //maybe give paramsvalidator a secret hidden key with that info on it so we can check here at build time
+    //paramsValidator.route will have that info to check against. throw descriptive error if mismatch
+    
     return (requestEvent: RequestEvent<Params>) => {
         if (paramsValidator) {
             const params = paramsValidator(requestEvent.params);
@@ -157,8 +168,10 @@ export function createParamsValidator<
                 //In the function case, we've already continued above, but TypeScript won't recognize that
                 //That's why I think we have to typecast here
                 const typeTag = validation as keyof ActualTypeByTag;
-                const isRequired = (typeTag.endsWith("?") === false);
+                const isRequired = (!typeTag.endsWith("?") && !key.endsWith("?"));
                 const isOptional = !isRequired;
+
+                if (key.endsWith("?"))
 
                 if (isRequired && values[key] === undefined) {
                     throw Error(`Incoming key:value pairs are missing key '${key}'`)

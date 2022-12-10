@@ -4,8 +4,9 @@ import { route } from "~/typed-routing/helpers";
 
 export default component$(() => {
     return <div>
-        <a href={route("/product/[productId]", {
-            productId: "heyeh"
+        <a href={route("/orgs/[orgName]/[repo]/", {
+            orgName: "Test",
+            repo: "13131231",
         })}>
             Click me!
         </a>
