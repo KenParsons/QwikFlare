@@ -44,7 +44,7 @@ export const convertToStringFromType = (value: any) => {
     return (typeof (value) === "object") ? JSON.stringify(value) : `${value}`;
 }
 
-export const decodeRouteParams = (routeParams: Record<string, string>) => {
+export const decodePathParams = (routeParams: Record<string, string>) => {
     const decoded: { [key: string]: any } = {};
     for (const param in routeParams) {
         const value = routeParams[param];

@@ -4,7 +4,7 @@
 // import { PathParamsByRoute } from "~/typed-routing/route-types";
 // Would love input on that, thanks!
 
-import { convertToStringFromType } from "./endcoding-decoding";
+import { convertToStringFromType, decodePathParams, decodeQueryParams } from "./endcoding-decoding";
 import { HandlerTypesByRouteAndMethod } from "./endpoint-types";
 import { RequestEvent } from "~/qwik-city/runtime/src";
 import { PathParamsByRoute } from "./route-types";
@@ -79,18 +79,20 @@ export function handler<
 
     return (requestEvent: RequestEvent<Params>) => {
         if (paramsValidator) {
-            const params = paramsValidator(requestEvent.params);
+            //NOTE This is an alternative way where decoding only happens when calling the validator (still before actual validation!)
+            //But this may be desired if we don't want auto-decoding happening for someone who's not even using any of this system:
+            const queryParams = decodeQueryParams(requestEvent.url.searchParams);
+            const pathParams = decodePathParams(requestEvent.params!);
+
+            const params = paramsValidator({...pathParams, ...queryParams});
+
+
             requestEvent.params = params;
         }
         return requestHandler(requestEvent)
     }
 }
 
-
-
-
-type EndsWithQM<T> = T extends `${string}?` ? true : false
-type RemoveEndingQM<T> = T extends `${infer AllButLast}?` ? AllButLast : T
 
 
 type PrimitiveByTag = {
@@ -133,6 +135,8 @@ type ResultOfValidation<
 
 
 
+type EndsWithQM<T> = T extends `${string}?` ? true : false
+type RemoveEndingQM<T> = T extends `${infer AllButLast}?` ? AllButLast : T
 
 export function createParamsValidator<
     Route extends keyof PathParamsByRoute,
@@ -159,6 +163,7 @@ export function createParamsValidator<
 
     type TypeEnforcedParams = UndefinedAsOptional<__TypeEnforcedParams>
     function getValidatedValuesOrThrow<Values extends Record<string, any>>(values: Values, context?: any): TypeEnforcedParams {
+        console.log({validations, values})
         if (typeof validations === "function") {
             try {
                 //We have to use the runtime validation using typeof, limited to the general "function"
@@ -177,9 +182,9 @@ export function createParamsValidator<
         try {
 
             for (const key in validations) {
-                const validation = validations[key];
-                const value = values[key];
+                const value = key.endsWith("?") ? values[key.slice(0,-1)] : values[key];
 
+                const validation = validations[key];
                 if (typeof (validation) === "function") {
                     validation(value);
                     continue;
@@ -191,11 +196,9 @@ export function createParamsValidator<
                 const isRequired = (!typeTag.endsWith("?") && !key.endsWith("?"));
                 const isOptional = !isRequired;
 
-                if (key.endsWith("?"))
-
-                    if (isRequired && values[key] === undefined) {
-                        throw Error(`Incoming key:value pairs are missing key '${key}'`)
-                    }
+                if (isRequired && values[key] === undefined) {
+                    throw Error(`Incoming key:value pairs are missing key '${key}'`)
+                }
 
                 if (typeTag === "null" || typeTag === "null?") { // the infamous typeof bug rears its head. have to check this manually
                     const isNull = value === null;

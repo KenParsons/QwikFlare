@@ -5,7 +5,7 @@ import { createParamsValidator, handler } from "~/typed-routing/helpers";
 const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]/", {
     //the following two will be required because [orgName] and [repo] are in the path
     orgName: "string",
-    repo: "string",
+    repo: "number",
 
     //added support for the following syntax, so the question mark looks more like Typescript
     //also will allow us to do optional object/arrays in the future without needing validator function
@@ -13,7 +13,8 @@ const paramsValidator = createParamsValidator("/orgs/[orgName]/[repo]/", {
     "test?": "string",
 
     //so we could remove this following syntax if we want. leaving both for now
-    anotherTest: "string?"
+    anotherTest: "string?",
+    requiredString: "string"
 });
 
 export const onGet = handler(paramsValidator, (requestEvent) => {
